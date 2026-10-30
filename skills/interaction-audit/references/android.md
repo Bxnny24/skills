@@ -8,10 +8,10 @@
 - Input: `adb shell input tap x y`, `input swipe x1 y1 x2 y2 [ms]` (long press = swipe to the same point with 800 ms), `input text '...'`, `input keyevent KEYCODE_BACK|KEYCODE_HOME|KEYCODE_APP_SWITCH|KEYCODE_ENTER`.
 - Proof: `adb exec-out screencap -p > screenshots/<id>.png`; video `adb shell screenrecord /sdcard/x.mp4` then `adb pull`.
 - Logs: `adb logcat -c` before an item, `adb logcat -d *:E` after; crashes show as `FATAL EXCEPTION`.
-- Variations: `adb shell cmd uimode night yes|no`, `adb shell settings put system font_scale 2.0`, `adb shell settings put system user_rotation 1` (after disabling auto-rotate), `adb shell svc wifi disable` / `svc data disable` (emulator only — never on the user's own phone without asking), `adb shell pm revoke|grant <package> <permission>`, `adb shell am start -a android.intent.action.VIEW -d '<deep link>'`.
+- Variations: `adb shell cmd uimode night yes|no`, `adb shell settings put system font_scale 2.0`, `adb shell settings put system user_rotation 1` (after disabling auto-rotate), `adb shell svc wifi disable` / `svc data disable` (emulator only — never on the user's own phone unless approved up front), `adb shell pm revoke|grant <package> <permission>`, `adb shell am start -a android.intent.action.VIEW -d '<deep link>'`.
 - agent-device, Maestro or Appium may exist in the project; use them if they are already set up.
 
-Android tooling runs on macOS, Windows and Linux. Use the AVD the project names, otherwise one booted or the newest image matching `minSdk`/`targetSdk`; note it in the checklist header. Emulators need hardware acceleration — in a cloud sandbox without it, use the fallbacks in [environments.md](environments.md): a phone over `adb pair`/`adb connect` on the same Wi-Fi, a user-driven pass, or a device farm (ask first).
+Android tooling runs on macOS, Windows and Linux. Use the AVD the project names, otherwise one booted or the newest image matching `minSdk`/`targetSdk`; note it in the checklist header. Emulators need hardware acceleration — in a cloud sandbox without it, use the fallbacks in [environments.md](environments.md): a phone over `adb pair`/`adb connect` on the same Wi-Fi, a user-driven pass, or a device farm (only if approved up front).
 
 ## Code pass – what to grep
 

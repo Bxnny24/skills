@@ -1,6 +1,6 @@
 # Accessibility features
 
-Every system accessibility feature the platform offers gets its own checklist items. Turn it on, walk the main screens (all screens for screen readers and text size), check the expected behaviour below, then turn it off again so later items start from the default. Restore every setting you changed at the end of the run and say so in the report. On the user's own device, ask before changing system settings.
+Every system accessibility feature the platform offers gets its own checklist items. Turn it on, walk the main screens (all screens for screen readers and text size), check the expected behaviour below, then turn it off again so later items start from the default. Restore every setting you changed at the end of the run and say so in the report. On the user's own device, change system settings only if approved in the upfront round.
 
 ## What to check per feature
 
@@ -21,8 +21,8 @@ Every system accessibility feature the platform offers gets its own checklist it
 ## How to switch them on
 
 - **iOS Simulator:** `xcrun simctl ui booted content_size accessibility-extra-extra-extra-large` (reset: `large`), `xcrun simctl ui booted increase_contrast enabled|disabled`. Others (Bold Text, Reduce Motion, Reduce Transparency, Button Shapes, Smart Invert, Full Keyboard Access) through the Settings app in the Simulator → Accessibility. VoiceOver does not run in the Simulator: use Xcode's **Accessibility Inspector** (audit + element labels) there, and a real iPhone for an actual VoiceOver pass.
-- **Real iPhone:** Settings → Accessibility; the Accessibility Shortcut (triple-click side button) toggles VoiceOver quickly. Ask the user to switch features on their own phone.
+- **Real iPhone:** Settings → Accessibility; the Accessibility Shortcut (triple-click side button) toggles VoiceOver quickly. Switching features on their own phone is a user-driven step: agree on it in the upfront round and do it as one block.
 - **Android:** `adb shell settings put system font_scale 2.0`, `adb shell settings put secure high_text_contrast_enabled 1`, `adb shell settings put secure accessibility_display_inversion_enabled 1`, reduce motion via `adb shell settings put global animator_duration_scale 0` (and `transition_animation_scale`, `window_animation_scale`), TalkBack via `adb shell settings put secure enabled_accessibility_services com.google.android.marvin.talkback/com.google.android.marvin.talkback.TalkBackService` and `accessibility_enabled 1` (emulator image needs TalkBack installed). Accessibility Scanner gives an automated audit.
-- **macOS:** System Settings → Accessibility (VoiceOver with Cmd+F5, Increase Contrast, Reduce Motion, Reduce Transparency, text size). These are system-wide: ask before changing them.
-- **Windows:** Settings → Accessibility (Narrator with Win+Ctrl+Enter, Contrast themes, text size, Animation effects). System-wide: ask first.
+- **macOS:** System Settings → Accessibility (VoiceOver with Cmd+F5, Increase Contrast, Reduce Motion, Reduce Transparency, text size). These are system-wide: change them only if approved in the upfront round, and switch them back.
+- **Windows:** Settings → Accessibility (Narrator with Win+Ctrl+Enter, Contrast themes, text size, Animation effects). System-wide: only if approved up front.
 - **Web/extensions:** built-in browser `resize_window` with `colorScheme`, browser zoom 200 %, `read_page` for names and roles, keyboard-only pass; emulate `prefers-reduced-motion` and `prefers-contrast` with `javascript_tool` only for inspection (e.g. checking which CSS media queries exist), or through the OS settings with permission.

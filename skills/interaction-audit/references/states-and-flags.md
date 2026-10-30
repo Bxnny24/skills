@@ -19,7 +19,7 @@ Use only test accounts, sandbox purchases and local overrides — never real cus
 - Prefer the app's own debug switches (debug menu, launch arguments, environment variables, a local mock of the licence or flag service, `UserDefaults`/`SharedPreferences`/`localStorage` overrides in a dev build).
 - Sandbox purchases: StoreKit configuration files / sandbox testers (iOS), license testers and test cards (Google Play), the payment provider's test mode on the web.
 - Time-based states (trial ending, expiry, grace period): move the clock forward on a simulator or test device, or use the server's test hooks — and move it back afterwards.
-- If a state can't be reached without production access or a real purchase, mark it `blocked (needs …)` and ask.
+- If a state can't be reached without production access or a real purchase, mark it `not approved (needs …)` and list it in *Not checked*; don't ask mid-run.
 
 ## 3. What to check per state
 

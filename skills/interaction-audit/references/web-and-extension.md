@@ -20,5 +20,5 @@
 - Browser back/forward and reload on every route; deep links opened directly; invalid URLs.
 - Viewport sizes (phone, tablet, wide), dark mode, 200 % zoom.
 - Network: offline (DevTools or stopping the backend), slow responses, failed requests and their error UI.
-- Forms: empty submit, too long input, special characters, paste, double submit. Do not submit forms that send data outward (contact forms, sign-ups, payments) without asking.
+- Forms: empty submit, too long input, special characters, paste, double submit. Do not submit forms that send data outward (contact forms, sign-ups, payments) unless approved up front.
 - Extensions: popup opened on a normal page, on a restricted page (`chrome://`, store pages), with no network; content script on several sites; extension reload while a page is open; the connection to a companion app missing (app closed / not paired).

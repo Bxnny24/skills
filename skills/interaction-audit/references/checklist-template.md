@@ -8,7 +8,7 @@
 Started: <date time> · Status: in progress | done
 Device/OS: <device, OS version> · State: <plan/account/flags for the full pass> · Versions covered: <newest, oldest>
 Legend: Prio A critical (crash, data loss, money, security) · B core flow · C other screens · D polish ·
-ok · problem (→ F-ID) · blocked · skipped (destructive) · asked · not reachable
+ok · problem (→ F-ID) · blocked · skipped (destructive) · not approved · not reachable
 
 ## Coverage
 | Screen | Items | ok | problem | blocked | skipped | not reachable |

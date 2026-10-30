@@ -28,8 +28,8 @@ from pathlib import Path
 
 TEMPLATE = Path(__file__).resolve().parent.parent / "assets" / "report-template.html"
 PLACEHOLDER = "__REPORT_DATA__"
-STATUSES = ["ok", "problem", "blocked", "skipped", "asked", "not reachable", "not applicable", "not supported"]
-UNCHECKED = {"blocked", "not reachable"}
+STATUSES = ["ok", "problem", "blocked", "skipped", "not approved", "not reachable", "not applicable", "not supported"]
+UNCHECKED = {"blocked", "not reachable", "not approved"}
 MEDIA_RE = re.compile(r"[\w./*\-\[\]]+\.(?:png|jpe?g|gif|webp|svg|mp4|mov|webm)", re.IGNORECASE)
 VIDEO_EXT = {".mp4", ".mov", ".webm"}
 MIME = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif",
@@ -55,7 +55,7 @@ LABELS = {
                  "should": "Should be", "why": "Why it matters", "fix": "Fix", "options": "Options", "proof": "Proof",
                  "what": "What", "leave": "Why leave it", "whynot": "Why not", "howcheck": "How you check it"},
         "prioNames": {"A": "critical", "B": "core flow", "C": "other screens", "D": "polish"},
-        "statuses": {"ok": "ok", "problem": "problem", "blocked": "blocked", "skipped": "skipped", "asked": "asked",
+        "statuses": {"ok": "ok", "problem": "problem", "blocked": "blocked", "skipped": "skipped", "not approved": "not approved",
                      "not reachable": "not reachable", "not applicable": "not applicable",
                      "not supported": "not supported", "open": "open", "other": "other"},
         "cmp": {"changed": "changed", "new": "new", "same": "unchanged"},
@@ -78,7 +78,7 @@ LABELS = {
                  "howcheck": "So prüfst du es"},
         "prioNames": {"A": "kritisch", "B": "Kernablauf", "C": "andere Bildschirme", "D": "Feinschliff"},
         "statuses": {"ok": "ok", "problem": "Problem", "blocked": "blockiert", "skipped": "übersprungen",
-                     "asked": "gefragt", "not reachable": "nicht erreichbar", "not applicable": "nicht zutreffend",
+                     "not approved": "nicht freigegeben", "not reachable": "nicht erreichbar", "not applicable": "nicht zutreffend",
                      "not supported": "nicht unterstützt", "open": "offen", "other": "anderes"},
         "cmp": {"changed": "geändert", "new": "neu", "same": "unverändert"},
         "summary": "{t} Punkte geprüft · {a} beheben · {b} entscheiden · {c} lassen · {n} nicht geprüft",
@@ -304,7 +304,7 @@ def build_data(run_dir, prev_dir, threshold, lang):
 
     unchecked_items = [i for s in sections for i in s["items"] if i["status"] in UNCHECKED]
     unchecked = [{"no": n, "prio": i["prio"], "what": i["what"],
-                  "why": re.sub(r"^(blocked|not reachable)\s*", "", i["result"]).strip(" ()") or i["result"],
+                  "why": re.sub(r"^(blocked|not reachable|not approved)\s*", "", i["result"]).strip(" ()") or i["result"],
                   "how": i["expected"]} for n, i in enumerate(unchecked_items, len(findings) + 1)]
 
     out_findings = [{

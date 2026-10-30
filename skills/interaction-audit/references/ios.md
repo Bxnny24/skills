@@ -12,7 +12,7 @@ Use the simulator or device the project names (instructions, launch config, memo
 
 ## Not on a Mac (Windows, Linux, cloud sandbox)
 
-Simulator and Xcode exist only on macOS: on Windows or Linux an iOS app can't be built or simulated. Tell the user right away and offer the fallbacks in [environments.md](environments.md) — a session on their Mac, or a user-driven pass on a real iPhone with a TestFlight build, are usually the best ones.
+Simulator and Xcode exist only on macOS: on Windows or Linux an iOS app can't be built or simulated. Say so in the upfront questions together with the fallbacks from [environments.md](environments.md); a session on their Mac, or a user-driven pass on a real iPhone with a TestFlight build, are usually the best ones.
 
 ## Code pass – what to grep (SwiftUI / UIKit)
 

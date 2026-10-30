@@ -23,21 +23,21 @@ Run the full audit on the newest OS / browser the app supports, then a layout-an
 
 | Target | Newest | Oldest supported | Also |
 |---|---|---|---|
-| iOS / iPadOS | latest iOS runtime | runtime matching the deployment target (`xcodes runtimes` or Xcode → Settings → Components to install; ask before downloading) | beta OS if the user is preparing for it |
+| iOS / iPadOS | latest iOS runtime | runtime matching the deployment target (`xcodes runtimes` or Xcode → Settings → Components to install; only if approved up front) | beta OS if the user is preparing for it |
 | Android | latest API level image | `minSdk` image | one mid version where behaviour changed (e.g. notification permission, predictive back) |
 | macOS app | current macOS | minimum version — usually only in a VM or on a second Mac, otherwise `blocked (needs macOS <x>)` | |
 | Windows app | Windows 11 current | Windows 10 if supported (VM) | |
-| Web app | latest Chrome, Edge, Firefox, Safari | oldest versions in `browserslist` (Playwright browser channels, BrowserStack — ask first) | mobile Safari on iOS Simulator, Chrome on Android emulator |
+| Web app | latest Chrome, Edge, Firefox, Safari | oldest versions in `browserslist` (Playwright browser channels, BrowserStack — only if approved up front) | mobile Safari on iOS Simulator, Chrome on Android emulator |
 | Browser extension | every store it ships to: Chrome, Edge, Firefox, Safari | `minimum_chrome_version` | Manifest V3 service-worker restarts, browser-specific APIs (`browser.*` vs `chrome.*`) |
 
-Installing extra runtimes, browsers or VMs costs disk space and time: list what's missing and ask before downloading. Record which versions were covered in the checklist header; anything not covered goes into the report's residual risk.
+Installing extra runtimes, browsers or VMs costs disk space and time: list what's missing in the upfront questions, with sizes, and download only what the user approves. Record which versions were covered in the checklist header; anything not covered goes into the report's residual risk.
 
 ## When the target can't run here
 
-Offer these to the user in this order and let them choose; never pick a paid or account-bound option yourself.
+Put these into the upfront questions in this order and let the user choose; never pick a paid or account-bound option yourself.
 
 1. **A session on the right machine.** Start or continue the work on a machine with the matching OS (an SSH host, a session started there, a remote desktop the user opens). Best option: the full skill runs unchanged.
 2. **A VM or second machine the user provides** (Windows VM on the Mac, a Mac reached from Windows, an Android phone on the same Wi-Fi with `adb pair`/`adb connect`). Drive it with computer-use or the platform's CLI if this session can reach it.
 3. **User-driven on a real device.** The user performs each step on the installed app (TestFlight, Play internal testing, an installer) while you go through the checklist one item at a time, read their screenshots and record results. Mark these items `ok (user-driven)`.
-4. **Cloud devices or machines** — macOS/Windows CI runners (automated scripts only, no interactive UI), BrowserStack, Sauce Labs, AWS Device Farm, Firebase Test Lab, remote devices via `agent-device`. These need the user's account and may cost money: ask first, never sign up or pay.
+4. **Cloud devices or machines** — macOS/Windows CI runners (automated scripts only, no interactive UI), BrowserStack, Sauce Labs, AWS Device Farm, Firebase Test Lab, remote devices via `agent-device`. These need the user's account and may cost money: only if approved up front, never sign up or pay.
 5. **Cover what runs here and leave the rest open.** Shared core tests, the web view or another platform build of the same feature, and a code-only inventory so the checklist is ready. Remaining items stay `blocked (needs <host>)` — never mark them done from code.
