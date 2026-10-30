@@ -23,6 +23,7 @@ import datetime
 import hashlib
 import json
 import re
+import struct
 import sys
 from pathlib import Path
 
@@ -242,6 +243,46 @@ def compare(run_dir, prev_dir, rel, threshold):
             "diff": rel_link(diff_path, run_dir) if diff_path.exists() else None}
 
 
+MIN_PROOF_WIDTH = 600
+
+
+def image_size(path):
+    """Width and height of a PNG or JPEG from its header, or None."""
+    try:
+        with open(path, "rb") as f:
+            head = f.read(26)
+            if head[:8] == b"\x89PNG\r\n\x1a\n":
+                return struct.unpack(">II", head[16:24])
+            if head[:2] == b"\xff\xd8":
+                f.seek(2)
+                while True:
+                    marker, size = struct.unpack(">2sH", f.read(4))
+                    if marker[0] != 0xFF:
+                        return None
+                    if 0xC0 <= marker[1] <= 0xCF and marker[1] not in (0xC4, 0xC8, 0xCC):
+                        h, w = struct.unpack(">xHH", f.read(5))
+                        return w, h
+                    f.seek(size - 2, 1)
+    except (OSError, struct.error):
+        return None
+    return None
+
+
+def proof_warnings(data, run_dir):
+    """Proofs of findings that the user could not read: missing or too small."""
+    out = []
+    for f in data.get("findings", []):
+        for m in f.get("media", []):
+            if m["missing"]:
+                out.append(f"finding {f['no']}: {m['src']} is missing")
+            elif m["type"] == "image":
+                size = image_size(run_dir / m["src"])
+                if size and size[0] < MIN_PROOF_WIDTH:
+                    out.append(f"finding {f['no']}: {m['src']} is only {size[0]}×{size[1]} px; "
+                               f"recapture at full resolution or scale the detail crop to ≥ {MIN_PROOF_WIDTH} px")
+    return out
+
+
 def media_list(run_dir, proof, prev_dir=None, threshold=0.0):
     out = []
     for rel in expand_media(run_dir, proof):
@@ -398,6 +439,8 @@ def main():
     if not any(s["items"] for s in data.get("sections", [])):
         print("Warning: no checklist items found. checklist.md needs table rows (| ID | Interaction | …) under '## ' headings, "
               "as in references/checklist-template.md.", file=sys.stderr)
+    for warning in proof_warnings(data, run_dir):
+        print("Proof warning: " + warning, file=sys.stderr)
     summary = summary_markdown(data)
     if not args.link_media:
         embed_media(data, run_dir)
