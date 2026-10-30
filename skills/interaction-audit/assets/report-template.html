@@ -47,6 +47,7 @@ h1{margin:0;font-size:17px;font-weight:700}
 .f{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:6px;padding:3px 8px;font:inherit;font-size:12.5px;cursor:pointer;display:inline-flex;gap:5px;align-items:center}
 .f i{width:8px;height:8px;border-radius:2px;background:var(--t)}
 .f[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.runs{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:6px;padding:3px 6px;font:inherit;font-size:12.5px}
 .bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .search{flex:1 1 200px;min-width:0;max-width:340px;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:6px;padding:4px 8px;font:inherit}
 
@@ -135,10 +136,15 @@ dialog#lb p{margin:4px 0 0;text-align:center;font:11.5px var(--mono);color:#ddd}
       "</tr></thead><tbody>" + rows.join("") + "</tbody></table></div>";
   }
 
+  function runMenu() {
+    if (!D.history || !D.history.length) return "";
+    return '<select class="runs" aria-label="Runs" onchange="if(this.value)location.href=this.value">' +
+      D.history.map(function (h, i) { return '<option value="' + (i ? esc(h.href) : "") + '">' + esc(h.label) + "</option>"; }).join("") + "</select>";
+  }
   var GROUPS = [["fix", "var(--fix)"], ["decide", "var(--decide)"], ["leave", "var(--leave)"]];
   var c = D.counts;
 
-  var html = '<div class="top"><h1>' + esc(D.title) + "</h1>" +
+  var html = '<div class="top"><div class="bar"><h1>' + esc(D.title) + "</h1>" + runMenu() + "</div>" +
     '<div class="counts"><span><b>' + c.items + "</b> " + esc(L.itemsChecked) + "</span>" +
     GROUPS.map(function (g) { return '<button type="button" class="f" data-group="' + g[0] + '" style="--t:' + g[1] + '" aria-pressed="false"><i></i><b>' + c[g[0]] + "</b> " + esc(L.groups[g[0]]) + "</button>"; }).join("") +
     '<button type="button" class="f" data-group="unchecked" style="--t:var(--unchecked)" aria-pressed="false"><i></i><b>' + c.unchecked + "</b> " + esc(L.groups.unchecked) + "</button>" +

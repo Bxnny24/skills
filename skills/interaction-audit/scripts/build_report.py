@@ -45,7 +45,7 @@ LABELS = {
         "eyebrow": "Interaction audit", "itemsChecked": "items checked", "comparedWith": "compared with",
         "changedShots": "changed screenshots", "allPrios": "All priorities", "search": "Search findings",
         "missing": "missing", "details": "Finding details", "startState": "Start state", "category": "Category",
-        "notes": "Notes", "checklist": "All checklist items", "previous": "previous", "current": "current",
+        "notes": "Notes", "item": "Checklist item", "logs": "Log", "checklist": "All checklist items", "previous": "previous", "current": "current",
         "blink": "Blink compare", "stop": "Stop",
         "groups": {"fix": "Fix", "decide": "Decide", "leave": "Leave", "unchecked": "Not checked"},
         "hints": {"fix": "Clear bugs and rule violations. Answer with the numbers you want fixed.",
@@ -66,7 +66,7 @@ LABELS = {
         "eyebrow": "Interaktions-Prüfung", "itemsChecked": "Punkte geprüft", "comparedWith": "verglichen mit",
         "changedShots": "geänderte Screenshots", "allPrios": "Alle Prios", "search": "Funde durchsuchen",
         "missing": "fehlt", "details": "Funde im Detail", "startState": "Ausgangslage", "category": "Art",
-        "notes": "Notizen", "checklist": "Alle Prüfpunkte", "previous": "vorher", "current": "jetzt",
+        "notes": "Notizen", "item": "Prüfpunkt", "logs": "Log", "checklist": "Alle Prüfpunkte", "previous": "vorher", "current": "jetzt",
         "blink": "Überblenden", "stop": "Stopp",
         "groups": {"fix": "Beheben", "decide": "Entscheiden", "leave": "Lassen", "unchecked": "Nicht geprüft"},
         "hints": {"fix": "Klare Fehler und Regelverstöße. Antworte mit den Nummern, die behoben werden sollen.",
@@ -354,6 +354,8 @@ def build_data(run_dir, prev_dir, threshold, lang):
         "actual": f["fields"].get("actual", ""), "expected": f["fields"].get("expected", ""),
         "why": f["fields"].get("why it matters", ""), "fix": f["fix"],
         "category": f["fields"].get("category", ""), "notes": f["fields"].get("notes", ""),
+        "item": (re.search(r"item\s+(\S+)\s*$", f["fields"].get("where", "")) or [None, ""])[1],
+        "logs": (re.split(r"log lines?:\s*", f["fields"].get("proof", ""), maxsplit=1) + [""])[1].strip(),
         "media": media_list(run_dir, f["fields"].get("proof", "")),
     } for f in findings]
 
@@ -426,6 +428,8 @@ def main():
     parser.add_argument("--lang", choices=sorted(LABELS), default="en", help="language of headings and column names")
     parser.add_argument("--link-media", action="store_true",
                         help="link images instead of embedding them in report.html (smaller file, needs the run folder)")
+    parser.add_argument("--history", type=Path,
+                        help="JSON list of earlier runs [{\"label\", \"href\"}] for the run menu (artifact with several runs)")
     parser.add_argument("--threshold", type=float, default=0.002,
                         help="changed-pixel ratio still counted as unchanged (Pillow only)")
     args = parser.parse_args()
@@ -441,6 +445,8 @@ def main():
               "as in references/checklist-template.md.", file=sys.stderr)
     for warning in proof_warnings(data, run_dir):
         print("Proof warning: " + warning, file=sys.stderr)
+    if args.history:
+        data["history"] = json.loads(args.history.read_text(encoding="utf-8"))
     summary = summary_markdown(data)
     if not args.link_media:
         embed_media(data, run_dir)
