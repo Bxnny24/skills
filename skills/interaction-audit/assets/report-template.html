@@ -34,6 +34,7 @@
   --fix:#ff6b63; --decide:#f2a33a; --leave:#8fbf92; --unchecked:#9ca3af; --ok:#5fc27f; --when:#c4a3f0; color-scheme:dark}
 
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--fg);font:13.5px/1.45 var(--sans)}
 a{color:var(--accent)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:1px}
@@ -121,15 +122,15 @@ code{font:12px var(--mono);background:var(--head);padding:0 4px;border-radius:3p
 .more button{font:inherit;color:var(--accent);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}
 
 /* Checklist tab */
-.ck{border:1px solid var(--line);border-radius:6px}
-.ck > summary{cursor:pointer;padding:6px 10px;font-weight:600;background:var(--head)}
-.ck > summary span{color:var(--muted);font-weight:400}
-.scroll{overflow-x:auto;border-top:1px solid var(--line)}
-table{border-collapse:collapse;width:100%;min-width:640px}
-th{text-align:left;font-weight:600;font-size:12px;color:var(--muted);padding:5px 10px;border-bottom:1px solid var(--line)}
+/* Same look as the findings areas: header bar, column row, plain rows */
+#pc{display:grid;gap:14px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:640px;table-layout:fixed}
+th{text-align:left;font-weight:600;font-size:11.5px;color:var(--muted);padding:5px 10px;border-bottom:1px solid var(--line)}
 td{padding:5px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:hover td{background:var(--hover)}
 tr:last-child td{border-bottom:0}
-.st{font:600 11px var(--mono);text-transform:uppercase}
+.st{font-size:12px;font-weight:600}
 .st.ok{color:var(--ok)}.st.problem{color:var(--a)}.st.blocked,.st.not-reachable{color:var(--unchecked)}.st.skipped,.st.not-approved{color:var(--b)}
 
 dialog#lb{border:0;padding:0;background:transparent;max-width:96vw;max-height:94vh;overflow:auto}
@@ -269,11 +270,16 @@ dialog#lb p{margin:4px 0 0;text-align:center;font:11.5px var(--mono);color:#ddd}
 
   html += '<div id="pc" hidden>' + D.sections.map(function (sec) {
     var problems = sec.items.filter(function (i) { return i.status === "problem"; }).length;
-    return '<details class="ck"><summary>' + md(sec.title) + " <span>· " + sec.items.length + (problems ? " · " + problems + " " + esc(L.statuses.problem) : "") + "</span></summary>" +
-      '<div class="scroll"><table><thead><tr><th>ID</th><th>' + esc(C.prio) + "</th><th>" + esc(C.what) + "</th><th>" + esc(C.should) + "</th><th>Status</th><th>" + esc(C.proof) + "</th></tr></thead><tbody>" +
+    return '<details class="area ck" open><summary>' + md(sec.title) + ' <span>' + sec.items.length + '</span><span class="mix">' +
+      (problems ? '<span class="st problem">' + problems + " " + esc(L.statuses.problem) + "</span>" : "") + "</span></summary>" +
+      '<div class="scroll"><table><colgroup><col style="width:84px"><col style="width:48px"><col><col><col style="width:20%"><col style="width:150px"></colgroup>' +
+      "<thead><tr><th>ID</th><th>" + esc(C.prio) + "</th><th>" + esc(C.what) + "</th><th>" + esc(C.should) + "</th><th>Status</th><th>" + esc(C.proof) + "</th></tr></thead><tbody>" +
       sec.items.map(function (it) {
+        // The result often repeats the status word ("problem → F-001"); show only what it adds.
+        var extra = String(it.result || "").replace(new RegExp("^" + it.status + "\\s*"), "").replace(/^[(\s]+|[)\s]+$/g, "");
         return '<tr><td class="no">' + esc(it.id) + "</td><td>" + grade(it.prio) + "</td><td>" + md(it.what) + "</td><td>" + md(it.expected) +
-          '</td><td><span class="st ' + esc(it.status.replace(/ /g, "-")) + '">' + esc(L.statuses[it.status] || it.status) + "</span>" + (it.result && it.status !== "ok" ? "<br>" + md(it.result) : "") + "</td><td>" + cmpMedia(it.media) + "</td></tr>";
+          '</td><td><span class="st ' + esc(it.status.replace(/ /g, "-")) + '">' + esc(L.statuses[it.status] || it.status) + "</span>" +
+          (extra && it.status !== "ok" ? '<br><span class="when always">' + md(extra) + "</span>" : "") + "</td><td>" + cmpMedia(it.media) + "</td></tr>";
       }).join("") + "</tbody></table></div></details>";
   }).join("") + "</div>";
 
@@ -284,7 +290,7 @@ dialog#lb p{margin:4px 0 0;text-align:center;font:11.5px var(--mono);color:#ddd}
   var state = { group: null, prio: { A: true, B: true, C: false, D: false }, q: "" };
   function apply() {
     var q = state.q.toLowerCase(), hidden = 0, shown = 0;
-    app.querySelectorAll(".area").forEach(function (area) {
+    app.querySelectorAll("#pf .area").forEach(function (area) {
       var n = 0, mix = { A: 0, B: 0, C: 0, D: 0 };
       area.querySelectorAll(".fd").forEach(function (fd) {
         var p = fd.dataset.prio, groupOk = !state.group || fd.dataset.group === state.group;
