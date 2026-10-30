@@ -40,7 +40,7 @@ If a design skill is available, load it and use its checklist as the rubric for 
 - **Components:** native controls where the language expects them; custom components look and behave like their siblings everywhere; states (pressed, disabled, focused, selected) styled consistently.
 - **Iconography:** one icon set, consistent weight and size relative to text, filled vs. outline used by rule.
 - **Motion:** durations and curves match the profile (e.g. iOS springs, Material easing and duration tokens); transitions are the platform's native ones unless the design system says otherwise; similar actions animate the same way; nothing animates that the language keeps static; reduced motion respected; haptics consistent with the platform.
-- **Writing:** labels follow the language's tone and capitalisation rules (title case vs. sentence case), consistent terms for the same thing.
+- **Writing:** labels follow the language's tone and capitalisation rules (title case vs. sentence case), consistent terms for the same thing on every screen, no typos or grammar errors (read every visible string once per language; also grep the string files — `Localizable.xcstrings`, `strings.xml`, i18n JSON — for typos, since some strings only appear in rare states), consistent punctuation (ellipsis for actions that need more input, no trailing full stops on buttons).
 
 How to measure: web and web views — read computed styles (`getComputedStyle`) with `javascript_tool` for inspection and compare with the tokens; native — compare zoomed screenshots at a known scale (pt/dp = px ÷ scale factor) and use the code as a hint (grep for literal numbers in `.padding(`, `dp`, `px`, hex colours, custom animation durations); motion — record a video and compare against the profile.
 

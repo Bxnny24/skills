@@ -13,6 +13,7 @@ Argument: the platform or area to cover (`mobile`, `ios`, `android`, `web`, `ext
 
 - **Full** (default): the whole app on the chosen platform.
 - **Changed** (`changed`, "only what this PR touches", after a branch or diff): derive the affected screens from `git diff <base>...HEAD` (UI files, routes, strings, shared components and everything that uses them), audit those fully and smoke-check the main flow of every other screen. Say in the report which screens were out of scope.
+- **Release** (`release`, "before submitting to the store"): full mode plus the store and legal checks in [references/store-and-legal.md](references/store-and-legal.md) and the oldest supported OS/browser versions.
 - **Resume**: if a `checklist.md` from an earlier run exists for the same platform and build, continue from its first open item instead of starting over; re-run items marked `problem` when the build changed.
 
 ## Ground rules
@@ -31,6 +32,7 @@ Argument: the platform or area to cover (`mobile`, `ios`, `android`, `web`, `ext
    - Host OS (`uname -s` / `$env:OS`) and what is installed: `xcrun simctl list devices` and `xcrun devicectl list devices` (iOS, macOS only), `adb devices` and `emulator -list-avds` (Android), the project's dev command.
    - Which driving tools this session has (loaded or deferred): iOS Simulator tool, built-in browser, Claude in Chrome, computer-use, `agent-device`, Playwright/Maestro in the project.
    - What the project targets and pins: deployment target, a simulator or device named in its instructions, launch configs, memory notes.
+   - The oldest and newest OS / browser versions the app supports, and which of them are installed here (see the version table in [references/environments.md](references/environments.md)).
    Write a short capability table at the top of `checklist.md` (platform → device/simulator → driving tool → available yes/no). [references/environments.md](references/environments.md) has the matrix of which target runs on which host (iOS only on macOS, Windows apps only on Windows, Android emulators need virtualisation, …). If the requested platform cannot run here, do not improvise: say so, offer the fallbacks listed there, and let the user choose. Platforms that *can* run here (e.g. the web part of the same app) may proceed meanwhile.
 3. Pick the platform reference and read it now:
    - iOS (Simulator or real iPhone): [references/ios.md](references/ios.md)
@@ -51,7 +53,11 @@ Build the full list before driving anything. Do both passes, because each misses
 
 Then add the **cross-cutting variations** that apply to the platform: light/dark mode, the system accessibility features (screen reader, large text, bold text, increase contrast, reduce motion, reduce transparency, voice and switch control, full keyboard access — see [references/accessibility.md](references/accessibility.md); each one the platform offers is a checklist item, not an optional extra), screen sizes and form factors (smallest, typical and largest supported size, tablet, foldable, split view, desktop window sizes and display scaling — see [references/screen-sizes.md](references/screen-sizes.md)), rotation, offline / server or peer unreachable, empty state (fresh install, no data), lots of data (long lists, long text), interrupted flows (background the app, cancel half way), keyboard-only navigation, localisation if the app ships more than one language.
 
+Also list the **states the app can be in** — plans and licences (free, trial, paid, expired, offline licence), account states, roles, feature flags and remote config — as a state matrix, and plan which screens to revisit in which state: [references/states-and-flags.md](references/states-and-flags.md). Use test accounts, sandbox purchases and local overrides only.
+
 Group the checklist by screen. Each item is one interaction with its expected result. Expect dozens to hundreds of items for a real app — that is the point.
+
+**Order by risk**, so an interrupted run has still covered what matters most: first the core flows (the reason the app exists), then anything touching money (purchases, licences, paywalls), then anything that can lose or leak data (delete, sync, sign-out, export, permissions), then the rest of the screens, then the cross-cutting variations and states. Mark each item's priority (`P1`–`P3`) in the checklist and work top-down.
 
 ### 3. Exercise — item by item
 
@@ -73,6 +79,7 @@ Watch for these problem classes in particular: crash or hang, dead control (noth
 
 Finish with:
 
+- The clickable report: `python3 <skill-dir>/scripts/build_report.py <run-dir>` writes `report.html` (filter by status, search, screenshots and videos per item, findings linked). With `--previous <earlier-run-dir>` it compares every screenshot with the same file from that run and marks it unchanged, changed or new, with side-by-side and blink comparison (pixel ratio and diff image if Pillow is installed). For stable comparisons, keep device, size and data the same and freeze the status bar (`xcrun simctl status_bar booted override --time 9:41 --batteryLevel 100`, Android demo mode). Open the report or send it with a file tool.
 - Coverage numbers: total items, ok, problem, blocked, skipped, not reachable — per screen.
 - The findings, most severe first.
 - What was **not** covered and why, plus the residual risk.

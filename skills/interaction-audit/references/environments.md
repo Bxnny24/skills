@@ -17,6 +17,21 @@ Every target needs a matching host to be exercised for real. Cross-platform fram
 
 Check the actual machine, not just the OS: virtualisation enabled, emulator images installed, enough RAM, the session's tools present. Record the result in the capability table at the top of `checklist.md`.
 
+## OS versions and browsers
+
+Run the full audit on the newest OS / browser the app supports, then a layout-and-main-flows pass on the **oldest** supported version, because API fallbacks, missing system features and different system UI break there first. Read the minimum from the project (`IPHONEOS_DEPLOYMENT_TARGET`, `minSdk`/`targetSdk`, `LSMinimumSystemVersion`, Windows target in the installer/manifest, `browserslist`, the extension manifest's `minimum_chrome_version` / `browser_specific_settings`).
+
+| Target | Newest | Oldest supported | Also |
+|---|---|---|---|
+| iOS / iPadOS | latest iOS runtime | runtime matching the deployment target (`xcodes runtimes` or Xcode → Settings → Components to install; ask before downloading) | beta OS if the user is preparing for it |
+| Android | latest API level image | `minSdk` image | one mid version where behaviour changed (e.g. notification permission, predictive back) |
+| macOS app | current macOS | minimum version — usually only in a VM or on a second Mac, otherwise `blocked (needs macOS <x>)` | |
+| Windows app | Windows 11 current | Windows 10 if supported (VM) | |
+| Web app | latest Chrome, Edge, Firefox, Safari | oldest versions in `browserslist` (Playwright browser channels, BrowserStack — ask first) | mobile Safari on iOS Simulator, Chrome on Android emulator |
+| Browser extension | every store it ships to: Chrome, Edge, Firefox, Safari | `minimum_chrome_version` | Manifest V3 service-worker restarts, browser-specific APIs (`browser.*` vs `chrome.*`) |
+
+Installing extra runtimes, browsers or VMs costs disk space and time: list what's missing and ask before downloading. Record which versions were covered in the checklist header; anything not covered goes into the report's residual risk.
+
 ## When the target can't run here
 
 Offer these to the user in this order and let them choose; never pick a paid or account-bound option yourself.
