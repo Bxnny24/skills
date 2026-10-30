@@ -79,6 +79,9 @@ h1{margin:0;font-size:16px;font-weight:700}
 .fd > summary:hover{background:var(--hover)}
 .fd[open] > summary{background:var(--open);font-weight:600}
 .fd > summary > *{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* An open row shows its cells in full; closed rows show the full text on hover (title). */
+.fd[open] > summary{align-items:start}
+.fd[open] > summary > *{white-space:normal;overflow:visible}
 .no{font:600 13px var(--mono);font-variant-numeric:tabular-nums}
 .w i{font-style:normal;color:var(--muted);padding:0 3px}
 .when{color:var(--when);font-size:12.5px}
@@ -242,8 +245,8 @@ dialog#lb p{margin:4px 0 0;text-align:center;font:11.5px var(--mono);color:#ddd}
   function row(r) {
     var f = r.f, first = (f.media || []).filter(function (m) { return !m.missing && m.type === "image"; })[0];
     return '<details class="fd" data-prio="' + esc(f.prio) + '" data-group="' + f.group + '"><summary>' +
-      '<span class="no">' + f.no + '</span><span class="p">' + grade(f.prio) + '</span><span class="w">' + (r.rest.length ? path(r.rest) : "–") +
-      '</span><span class="h">' + md(f.title || f.actual) + '</span><span class="when' + (isAlways(f.when) ? " always" : "") + '">' + (f.group === "unchecked" ? "" : esc(f.when || T.always)) +
+      '<span class="no">' + f.no + '</span><span class="p">' + grade(f.prio) + '</span><span class="w" title="' + esc(r.rest.join(" › ")) + '">' + (r.rest.length ? path(r.rest) : "–") +
+      '</span><span class="h" title="' + esc(f.title || f.actual) + '">' + md(f.title || f.actual) + '</span><span class="when' + (isAlways(f.when) ? " always" : "") + '" title="' + esc(f.when || "") + '">' + (f.group === "unchecked" ? "" : esc(f.when || T.always)) +
       '</span><span class="grp" style="--t:' + GCOL[f.group] + '">' + esc(L.groups[f.group]) + "</span>" +
       (first ? '<span class="mini-th"><img src="' + esc(src(first)) + '" alt=""></span>' : "<span></span>") + "</summary>" + detail(f) + "</details>";
   }
