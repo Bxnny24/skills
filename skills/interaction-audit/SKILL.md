@@ -24,6 +24,7 @@ Argument: the platform or area to cover (`mobile`, `ios`, `android`, `web`, `ext
 - **Real behaviour over code.** The code tells you *what exists*; only the running app tells you *whether it works*. Never mark an item done from reading code.
 - **One thing at a time per instance.** Stateful UI (focus, sheets, text fields, navigation stack) gets polluted by parallel actions. Within one app instance, drive serially and return to a known state after each item. For large apps (hundreds of controls), split the work by area across subagents only if each one gets its **own** instance — its own browser tab, simulator or emulator — and its own test data, with nothing shared that one could change under another (same account, same local database). Give each agent the checklist section, the design profile and the findings template; the main session merges the results and **re-checks every finding itself** before reporting it.
 - **Don't take over the user's machine.** Computer-use moves the real mouse and keyboard. If the user may be working on the same computer, settle in the upfront round whether you may drive native windows with it and when (e.g. "now, I'm away" or "only the browser build"); offer the browser or web-view build, a simulator, or a VM instead, and collect what truly needs the native app as a user-driven list. Steps only the user can do (switching settings on their own phone, plugging in a device, approving a system dialog) are agreed up front and done as one block — at the start if later items depend on them, otherwise at the end — never one by one in between.
+- **Leave the machine as you found it.** Everything the run starts, changes, installs or creates is undone at the end (step 5), and the report says what was removed and what was kept. Keep a running list of these things from the first step on, so nothing is forgotten after a long run.
 - **Write as you go.** Update the checklist and findings after every item, not at the end — a long run may be interrupted or summarized.
 
 ## Workflow
@@ -57,6 +58,7 @@ Steps 1–3 are silent groundwork so that step 4 can ask everything at once, wit
    - **User-driven steps:** what you need from them, and whether they do it now or as one block at the end.
    - **Result:** **1** `report.html` in the browser (recommended), **2** `summary.md` as a file card in the chat, or **3** tables in the chat with the proof images as separate cards (see *Deliver*); and whether they'll read it at this computer or remotely (remote: may the report be published as a private artifact?).
    - **Helpers:** anything missing that would cover more or make the run smoother — Claude in Chrome for an extension, computer-use for native windows, an Android emulator on Windows, an iOS runtime, a VM, `agent-device`, Pillow — each with what it unlocks and what it costs ([references/environments.md](references/environments.md#helpers-worth-suggesting)). Suggest, don't install unasked.
+   - **Afterwards:** keep the test build installed and the approved downloads (runtimes, browsers, emulator images), or remove them; how long to keep the run folder. Default: remove what the run installed, keep the run folder with the report.
    - **Blockers:** if something hides the rest of the app (crash on launch, login wall), keep going around it and report it, or stop right away. Default: keep going.
    Without an answer to a point, take the recommended or safest option and say which in one line.
 5. **Get the tool permissions out of the way** while the user is still there: run one harmless call of every tool the run will use (a screenshot through the simulator, browser or computer-use tool, opening the run folder, the first build command), so the app's own permission prompts and site approvals appear now instead of halfway through. If the session asks for every shell command, say so once and point to the allow-rule setting rather than letting the run stall on prompts.
@@ -136,6 +138,18 @@ In every format, the chat text itself is only the overview line, the closing que
 If the project tracks tests or issues somewhere (a status page, an issue tracker), follow its rules for where findings go, within what the user approved up front; file nothing publicly without that approval.
 
 After the closing question, offer (don't do unasked): fixing the design findings with the profile's tokens and the rubric skill (before/after screenshots as proof); turning the checklist's most important flows into automated UI tests in the framework the project already uses (XCUITest, Espresso/Compose tests, Maestro, Playwright), so the next audit only needs to cover what automation can't.
+
+### 5. Clean up
+
+Do this after delivering the report, also after an interrupted or failed run, and without asking again (the answers from the upfront round decide). Undo only what this run did, never things that were there before.
+
+1. **Settings back:** every system or device setting the run changed (dark mode, text size and other accessibility features, display scaling, language and region, network, location, permissions), the Simulator status-bar override (`xcrun simctl status_bar booted clear`), Android demo mode, browser zoom and emulation.
+2. **Processes off:** dev servers, watchers, log streams and recordings the run started; simulators, emulators and VMs it booted (leave the ones that were already running); browser tabs it opened.
+3. **Test data out:** content and accounts the run created inside the app, test-branch merges (`test/audit-<date>`, never pushed) and worktrees it made, then `git status` clean as before.
+4. **Installs:** the test build, runtimes, browsers, emulator images and tools installed for this run, unless the user chose to keep them.
+5. **Rubbish:** temporary files outside the run folder (scratch copies, frame extracts, diff images no longer referenced, downloaded installers), build output the run produced only for itself (a separate `DerivedData` folder or build directory, not the project's normal one).
+6. **Run folder slim:** keep `report.html`, `summary.md`, `checklist.md`, `findings.md` and the proofs the report uses; delete unreferenced screenshots and videos already turned into frame strips. With embedded images the report alone is enough to keep.
+7. **Report it:** one line in the chat — what was removed, how much space it freed (`du -sh` before and after), what was kept and where. Anything that couldn't be undone (a setting that needs the user's password) is named with how to undo it.
 
 ## Optional helper: agent-device
 
