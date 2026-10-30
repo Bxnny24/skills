@@ -44,6 +44,7 @@ ok · problem (→ F-ID) · blocked · skipped (destructive) · not approved · 
 - Severity: critical (crash, data loss, core flow blocked) | high (major feature broken) | medium (friction, workaround exists) | low (polish)
 - Category: crash · dead control · wrong text · layout · animation · state · feedback · accessibility · design · performance
 - Where: <full path as the user sees it, e.g. Settings › Shortcuts › Reset all shortcuts>, item <ID>
+- When: always | only in the scenario that triggers it, e.g. "only in dark mode", "only with text size 200 %", "only offline", "only on iPhone SE", "only with the free plan", "only after the app was in the background", "only in Firefox"; check the main variations before writing "always"
 - Start state: <e.g. fresh install, 3 clips, offline>
 - Steps:
   1. …

@@ -107,23 +107,23 @@ Watch for these problem classes in particular: crash or hang, dead control (noth
 
 ### 4. Report
 
-The result for the user is **always tables, in this fixed order, with no prose between them**, in the format the user chose (see *Deliver* below) — at most one short line under a heading. Write in the user's language and in plain words they recognise from the app, not in the shorthand you or the subagents used while working; never compress findings further on the way to the user. Translate the column names into short everyday words (in German: Nr · Prio · Wo · Was du tust · Was passiert · Richtig wäre · Warum es stört · Lösung / Optionen · Beweis; Lassen: Warum lassen; Nicht geprüft: Warum nicht · So prüfst du es; group headings Beheben · Entscheiden · Lassen · Nicht geprüft). Each cell stays short (a few words up to one sentence); details live in `findings.md` and the HTML report.
+The result for the user is **always tables, in this fixed order, with no prose between them**, in the format the user chose (see *Deliver* below) — at most one short line under a heading. Write in the user's language and in plain words they recognise from the app, not in the shorthand you or the subagents used while working; never compress findings further on the way to the user. Translate the column names into short everyday words (in German: Nr · Prio · Wo · Wann · Was du tust · Was passiert · Richtig wäre · Warum es stört · Lösung / Optionen · Beweis; Lassen: Warum lassen; Nicht geprüft: Warum nicht · So prüfst du es; group headings Beheben · Entscheiden · Lassen · Nicht geprüft). Each cell stays short (a few words up to one sentence); details live in `findings.md` and the HTML report.
 
 Groups are headings, never letters, because priority already uses letters. Findings get **one running number across all tables** (1, 2, 3 …, continuing into *Not checked*), so the user can answer with numbers alone.
 
 1. **Overview** — one line: items checked · to fix · to decide · to leave · not checked.
 2. **Fix** (clear bugs and rule violations), sorted by priority:
 
-   | No. | Prio | Where | What you do | What happens | Should be | Why it matters | Fix | Proof |
-   |---|---|---|---|---|---|---|---|---|
-   | 1 | B | Main window › Library › Clip list | Ctrl-click a second clip | only the second stays selected | both selected, like Explorer | multi-delete/move needs the tiny checkboxes | keep selection on Ctrl-click | [S04-07](screenshots/S04-07.png) |
+   | No. | Prio | Where | When | What you do | What happens | Should be | Why it matters | Fix | Proof |
+   |---|---|---|---|---|---|---|---|---|---|
+   | 1 | B | Main window › Library › Clip list | always | Ctrl-click a second clip | only the second stays selected | both selected, like Explorer | multi-delete/move needs the tiny checkboxes | keep selection on Ctrl-click | [S04-07](screenshots/S04-07.png) |
 
 3. **Decide** (may be intended or needs a product decision): same columns, but **Options** instead of *Fix* (e.g. "a) confirm dialog · b) undo toast · c) leave").
 4. **Leave** (cosmetic or arguably intended), short: `No. | Where | What | Why leave it`.
 5. **Not checked** — what was out of reach and how the user can check it: `No. | What | Why not | How you check it` (global shortcuts, pasting into other apps, tray, device-only features). Test-setup-only issues (mock data, test branch) go here too, marked as such, so they aren't mistaken for app bugs.
 6. **One question** to close: which option for each *Decide* finding, and whether *Fix* and *Leave* are fine (the user can answer with numbers, e.g. "1–4 yes, 5 a, 6 c").
 
-"Where" is the full path to the spot, using the names the user sees in the app, from window or screen down to the control: `Settings › Shortcuts › Reset all shortcuts`, `Popup › Search field`, `Library › Context menu › Move to collection`. The user must be able to find it without asking. "What you do" names concrete steps from a start state the user recognises; "What happens" and "Should be" are observable, not technical causes. Priority: A critical (crash, data loss, money, security) · B core flow broken · C other screens · D polish. "Proof" shows the screenshot itself (`<img src="screenshots/…" width="160">`, which renders in Markdown tables) or links the video.
+"When" is the scenario: `always`, or the condition it needs ("only in dark mode", "only offline", "only with text size 200 %", "only with the free plan", "only in Firefox"). Before writing `always`, try the finding in the main variations; before writing a condition, check it doesn't happen without it. "Where" is the full path to the spot, using the names the user sees in the app, from window or screen down to the control: `Settings › Shortcuts › Reset all shortcuts`, `Popup › Search field`, `Library › Context menu › Move to collection`. The user must be able to find it without asking. "What you do" names concrete steps from a start state the user recognises; "What happens" and "Should be" are observable, not technical causes. Priority: A critical (crash, data loss, money, security) · B core flow broken · C other screens · D polish. "Proof" shows the screenshot itself (`<img src="screenshots/…" width="160">`, which renders in Markdown tables) or links the video.
 
 **Deliver:**
 

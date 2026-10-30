@@ -153,12 +153,12 @@ dialog#lb p{margin:4px 0 0;text-align:center;font:11.5px var(--mono);color:#ddd}
     if (!rows.length) return;
     var leave = g[0] === "leave", decide = g[0] === "decide";
     var head = leave ? [C.no, C.prio, C.where, C.what, C.leave, C.proof]
-      : [C.no, C.prio, C.where, C.do, C.happens, C.should, C.why, decide ? C.options : C.fix, C.proof];
+      : [C.no, C.prio, C.where, C.when, C.do, C.happens, C.should, C.why, decide ? C.options : C.fix, C.proof];
     html += '<section data-group="' + g[0] + '"><h2 style="--t:' + g[1] + '"><i></i>' + esc(L.groups[g[0]]) + " <span>" + rows.length + "</span></h2>" +
       table(leave ? "narrow" : "", head, rows.map(function (f) {
         var cells = leave
           ? [md(f.title), md(f.why)]
-          : [md(f.steps.join(" → ")), md(f.actual), md(f.expected), md(f.why), decide ? opts(f.fix) : md(f.fix)];
+          : [md(f.when || ""), md(f.steps.join(" → ")), md(f.actual), md(f.expected), md(f.why), decide ? opts(f.fix) : md(f.fix)];
         return '<tr data-prio="' + esc(f.prio) + '"><td class="no">' + f.no + '</td><td class="p">' + grade(f.prio) + '</td><td class="w">' + where(f.where) + "</td>" +
           cells.map(function (x) { return "<td>" + x + "</td>"; }).join("") + '<td class="pr">' + thumbs(f.media) + "</td></tr>";
       })) + "</section>";

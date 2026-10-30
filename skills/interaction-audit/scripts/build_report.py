@@ -53,7 +53,7 @@ LABELS = {
                   "leave": "Cosmetic or arguably intended. Veto any you want fixed anyway.",
                   "unchecked": "Out of reach in this run, with how you can check it yourself."},
         "cols": {"no": "No.", "prio": "Prio", "where": "Where", "do": "What you do", "happens": "What happens",
-                 "should": "Should be", "why": "Why it matters", "fix": "Fix", "options": "Options", "proof": "Proof",
+                 "should": "Should be", "why": "Why it matters", "when": "When", "fix": "Fix", "options": "Options", "proof": "Proof",
                  "what": "What", "leave": "Why leave it", "whynot": "Why not", "howcheck": "How you check it"},
         "prioNames": {"A": "critical", "B": "core flow", "C": "other screens", "D": "polish"},
         "statuses": {"ok": "ok", "problem": "problem", "blocked": "blocked", "skipped": "skipped", "not approved": "not approved",
@@ -74,7 +74,7 @@ LABELS = {
                   "leave": "Kosmetisch oder vermutlich Absicht. Widersprich, wenn doch etwas behoben werden soll.",
                   "unchecked": "In diesem Lauf nicht erreichbar, mit Anleitung zum Selbstprüfen."},
         "cols": {"no": "Nr", "prio": "Prio", "where": "Wo", "do": "Was du tust", "happens": "Was passiert",
-                 "should": "Richtig wäre", "why": "Warum es stört", "fix": "Lösung", "options": "Optionen",
+                 "should": "Richtig wäre", "why": "Warum es stört", "when": "Wann", "fix": "Lösung", "options": "Optionen",
                  "proof": "Beweis", "what": "Was", "leave": "Warum lassen", "whynot": "Warum nicht",
                  "howcheck": "So prüfst du es"},
         "prioNames": {"A": "kritisch", "B": "Kernablauf", "C": "andere Bildschirme", "D": "Feinschliff"},
@@ -350,7 +350,7 @@ def build_data(run_dir, prev_dir, threshold, lang):
 
     out_findings = [{
         "no": f["no"], "id": f["id"], "group": f["group"], "prio": f["prio"], "title": f["title"],
-        "where": f["where"], "start": f["fields"].get("start state", ""), "steps": f["steps"],
+        "where": f["where"], "when": f["fields"].get("when", ""), "start": f["fields"].get("start state", ""), "steps": f["steps"],
         "actual": f["fields"].get("actual", ""), "expected": f["fields"].get("expected", ""),
         "why": f["fields"].get("why it matters", ""), "fix": f["fix"],
         "category": f["fields"].get("category", ""), "notes": f["fields"].get("notes", ""),
@@ -397,11 +397,11 @@ def summary_markdown(data):
             continue
         last = cols["fix"] if group == "fix" else cols["options"]
         lines += [f"## {L['groups'][group]}", "",
-                  f"| {cols['no']} | {cols['prio']} | {cols['where']} | {cols['do']} | {cols['happens']} | "
+                  f"| {cols['no']} | {cols['prio']} | {cols['where']} | {cols['when']} | {cols['do']} | {cols['happens']} | "
                   f"{cols['should']} | {cols['why']} | {last} | {cols['proof']} |",
-                  "|---|---|---|---|---|---|---|---|---|"]
+                  "|---|---|---|---|---|---|---|---|---|---|"]
         for f in rows:
-            cells = [f["no"], f["prio"], f["where"], " → ".join(f["steps"]), f["actual"], f["expected"],
+            cells = [f["no"], f["prio"], f["where"], f["when"], " → ".join(f["steps"]), f["actual"], f["expected"],
                      f["why"], f["fix"], md_proof(f["media"])]
             lines.append("| " + " | ".join(md_cell(x) for x in cells) + " |")
         lines.append("")
