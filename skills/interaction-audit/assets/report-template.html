@@ -58,7 +58,9 @@ h1{margin:0;font-size:16px;font-weight:700}
 .sep{width:1px;height:18px;background:var(--line)}
 
 /* Areas and rows */
-.area{border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.area{border:1px solid var(--line);border-radius:6px}
+.area > summary{border-radius:5px 5px 0 0}
+.area:not([open]) > summary{border-radius:5px}
 .area > summary{list-style:none;cursor:pointer;display:flex;gap:8px;align-items:center;padding:6px 10px;background:var(--head);font-weight:700;font-size:13.5px}
 .area > summary::-webkit-details-marker{display:none}
 .area > summary::before{content:"▸";color:var(--muted);font-size:11px;transition:transform .15s}
@@ -66,7 +68,8 @@ h1{margin:0;font-size:16px;font-weight:700}
 .area > summary span{color:var(--muted);font-weight:500}
 .area > summary .mix{margin-left:auto;display:flex;gap:8px;font:600 12px var(--mono)}
 .cols,.fd > summary{display:grid;grid-template-columns:64px 26px minmax(140px,.8fr) minmax(220px,2fr) minmax(120px,.8fr) 92px 64px;gap:10px;align-items:center;padding:5px 10px}
-.cols{font-size:11.5px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--line)}
+/* Column row sticks below the page bar while its own area scrolls past, then leaves with it. */
+.cols{font-size:11.5px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--line);position:sticky;top:var(--top-h,0px);z-index:1;background:var(--bg)}
 .fd{border-bottom:1px solid var(--line)}
 .fd:last-child{border-bottom:0}
 .fd > summary{list-style:none;cursor:pointer}
@@ -352,6 +355,12 @@ dialog#lb p{margin:4px 0 0;text-align:center;font:11.5px var(--mono);color:#ddd}
     });
   });
   apply();
+
+  // The column rows stick right under the page bar, so they need its height.
+  var bar = app.querySelector(".top");
+  function barHeight() { document.documentElement.style.setProperty("--top-h", bar.offsetHeight + "px"); }
+  barHeight();
+  if (window.ResizeObserver) new ResizeObserver(barHeight).observe(bar); else window.addEventListener("resize", barHeight);
 
   // Lightbox: click the image to switch between fit and 100 %; click outside or Esc to close.
   var lb = document.getElementById("lb");
