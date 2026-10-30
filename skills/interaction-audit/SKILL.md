@@ -9,6 +9,12 @@ The goal is **coverage**, not a quick bug hunt: by the end, every interaction th
 
 Argument: the platform or area to cover (`mobile`, `ios`, `android`, `web`, `extension`, `desktop`, or a screen/feature name). If missing, infer it from the project and the user's words; ask only when two platforms are equally plausible.
 
+## Modes
+
+- **Full** (default): the whole app on the chosen platform.
+- **Changed** (`changed`, "only what this PR touches", after a branch or diff): derive the affected screens from `git diff <base>...HEAD` (UI files, routes, strings, shared components and everything that uses them), audit those fully and smoke-check the main flow of every other screen. Say in the report which screens were out of scope.
+- **Resume**: if a `checklist.md` from an earlier run exists for the same platform and build, continue from its first open item instead of starting over; re-run items marked `problem` when the build changed.
+
 ## Ground rules
 
 - **Safe by default.** Never perform destructive or outward-facing actions without asking first in chat: purchases or subscriptions, sending real messages/emails/posts, deleting real user data, unpairing or signing out of real accounts, resetting settings, granting system permissions on the user's own device, changing account settings. Open the confirmation dialog, screenshot it, then **cancel** and mark the item `asked` or `skipped (destructive)`. Prefer test data and simulators; create throwaway test content yourself and delete only what you created.
@@ -40,6 +46,7 @@ Build the full list before driving anything. Do both passes, because each misses
 
 - **Code pass.** Grep the UI layer for every entry point: screens/routes/views, buttons and tappable views, menus and context menus, gestures (tap, long press/hold, swipe actions, drag and drop, pinch, pull to refresh), sheets/popovers/alerts/toasts, text fields and pickers, toggles in settings, keyboard shortcuts and menu-bar items, deep links/URL schemes, notifications, widgets/share extensions/shortcuts, permission requests, onboarding/first-run flows, empty/loading/error states, feature flags. Platform references list the patterns to search for.
 - **App pass.** Visit every reachable screen and list what you actually see (accessibility tree or `read_page` where available, screenshots otherwise). Add anything the code pass missed and note code entries you could not find on screen.
+- **Catalog pass.** Go through [references/interaction-catalog.md](references/interaction-catalog.md) section by section (gestures, mouse and pointer incl. double/triple/middle/modifier clicks, keyboard, text editing, language and region, lifecycle and updates, network and multi-device sync, performance, system integration and hardware, privacy, robustness) and add every entry that applies to a control or screen you found. This is what turns "I tapped every button" into real coverage.
 
 Then add the **cross-cutting variations** that apply to the platform: light/dark mode, the system accessibility features (screen reader, large text, bold text, increase contrast, reduce motion, reduce transparency, voice and switch control, full keyboard access — see [references/accessibility.md](references/accessibility.md); each one the platform offers is a checklist item, not an optional extra), screen sizes and form factors (smallest, typical and largest supported size, tablet, foldable, split view, desktop window sizes and display scaling — see [references/screen-sizes.md](references/screen-sizes.md)), rotation, offline / server or peer unreachable, empty state (fresh install, no data), lots of data (long lists, long text), interrupted flows (background the app, cancel half way), keyboard-only navigation, localisation if the app ships more than one language.
 
@@ -51,9 +58,11 @@ For every checklist item:
 
 1. Bring the app to the item's starting state.
 2. Perform the interaction with the platform's tool.
-3. Screenshot the result (and the intermediate state for animations or multi-step flows) into `screenshots/` with a name matching the item ID, e.g. `S03-07-long-press-menu.png`.
+3. Screenshot the result (and the intermediate state for animations or multi-step flows) into `screenshots/` with a name matching the item ID, e.g. `S03-07-long-press-menu.png`. For animations, transitions, jank or anything timing-related, record a short video instead (`xcrun simctl io booted recordVideo`, `adb shell screenrecord`, the browser's or OS's screen recording, `agent-device record`), because a still frame can't prove an animation is broken.
 4. Compare with the expected result: right screen, right text, animation completes, no freeze, no console/log errors, state persists after leaving and returning.
 5. Mark the item: `ok`, `problem` (link the finding), `blocked` (say what blocks it), `skipped (destructive)`, `asked`, or `not reachable`.
+
+After a crash or hang, collect the evidence before relaunching: the crash report (Simulator/macOS: `~/Library/Logs/DiagnosticReports/`; device: Xcode Organizer or `devicectl`; Android: `adb logcat -b crash`; Windows: Event Viewer → Application; web: console and network), plus the log lines around the timestamp.
 
 When something is wrong, write the finding immediately in `findings.md` (template in the checklist reference) with severity, exact repro steps from a known start state, expected vs actual, screenshot paths and relevant log lines. Then continue — don't stop to fix unless the user asked you to; a blocker that hides the rest of the app is the exception (report it and ask).
 
@@ -69,6 +78,8 @@ Finish with:
 - Paths to `checklist.md`, `findings.md` and the screenshots folder; send the most telling screenshots with a file tool if one is available.
 
 If the project tracks tests or issues somewhere (a status page, an issue tracker), follow its rules for where findings go — but ask before filing anything publicly.
+
+Offer, don't do unasked: turning the checklist's most important flows into automated UI tests in the framework the project already uses (XCUITest, Espresso/Compose tests, Maestro, Playwright), so the next audit only needs to cover what automation can't.
 
 ## Optional helper: agent-device
 
