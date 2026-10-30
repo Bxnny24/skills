@@ -14,7 +14,7 @@ Pick a single skill with `--skill <name>`, update later with `npx skills update`
 
 | Skill | What it does |
 |---|---|
-| [explore-every-interaction](skills/explore-every-interaction/SKILL.md) | Walks through a whole app and exercises every interaction (buttons, menus, gestures, settings, accessibility features, offline and empty states) on iOS, Android, web, browser extensions or desktop, with a checklist, screenshot proof and a findings report. |
+| [interaction-audit](skills/interaction-audit/SKILL.md) | Walks through a whole app and exercises every interaction (buttons, menus, gestures, settings, accessibility features, offline and empty states) on iOS, Android, web, browser extensions or desktop, with a checklist, screenshot proof and a findings report. |
 
 ## License
 

@@ -1,9 +1,9 @@
 ---
-name: explore-every-interaction
-description: Walk through a whole app and exercise every interaction it offers, one by one, with screenshot proof and a checklist file. Inventories every screen, control and gesture from the code and the running app, drives each one with the right tool for the platform (iOS Simulator or real iPhone, Android emulator, web, browser extension, desktop app on macOS or Windows), and records every crash, dead control, broken animation or wrong text with repro steps. Use this whenever the user wants to "go through the whole app", "tap everything", "test every button/interaction", do a full UI walkthrough, smoke test or exploratory pass before a release, check that nothing is broken after a big change, or says "/explore-every-interaction" with a platform such as mobile, ios, android, web, extension or desktop — even if they don't say "test".
+name: interaction-audit
+description: Walk through a whole app and exercise every interaction it offers, one by one, with screenshot proof and a checklist file. Inventories every screen, control and gesture from the code and the running app, drives each one with the right tool for the platform (iOS Simulator or real iPhone, Android emulator, web, browser extension, desktop app on macOS or Windows), and records every crash, dead control, broken animation or wrong text with repro steps. Use this whenever the user wants to "go through the whole app", "tap everything", "test every button/interaction", do a full UI walkthrough or interaction audit, smoke test or exploratory pass before a release, check that nothing is broken after a big change, or says "/interaction-audit" with a platform such as mobile, ios, android, web, extension or desktop — even if they don't say "test".
 ---
 
-# Explore every interaction
+# Interaction audit
 
 The goal is **coverage**, not a quick bug hunt: by the end, every interaction the app offers on the chosen platform has been exercised at least once, and there is proof. A short list of bugs is a by-product. If something could not be exercised, the checklist says so and why — an honest "not reached" beats a silent gap.
 
@@ -31,7 +31,7 @@ Argument: the platform or area to cover (`mobile`, `ios`, `android`, `web`, `ext
    - Android: [references/android.md](references/android.md)
    - Web app or browser extension: [references/web-and-extension.md](references/web-and-extension.md)
    - Desktop app (Tauri, Electron, native; macOS or Windows): [references/desktop.md](references/desktop.md)
-4. Create the run folder outside the product repositories (scratchpad or a private notes folder): `explore-<platform>-<YYYY-MM-DD>/` with `checklist.md`, `findings.md` and `screenshots/`. Copy the templates from [references/checklist-template.md](references/checklist-template.md).
+4. Create the run folder outside the product repositories (scratchpad or a private notes folder): `interaction-audit-<platform>-<YYYY-MM-DD>/` with `checklist.md`, `findings.md` and `screenshots/`. Copy the templates from [references/checklist-template.md](references/checklist-template.md).
 5. Build and launch the app; take a baseline screenshot.
 
 ### 2. Inventory — from code *and* from the running app
