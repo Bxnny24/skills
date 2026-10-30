@@ -84,27 +84,27 @@ Watch for these problem classes in particular: crash or hang, dead control (noth
 
 ### 4. Report
 
-The result for the user is **always tables, in this fixed order, with no prose between them** — at most one short line under a heading. Write in the user's language and in plain words they recognise from the app, not in the shorthand you or the subagents used while working; never compress findings further on the way to the user. Translate the column names. Each cell stays short (a few words up to one sentence); details live in `findings.md` and the HTML report.
+The result for the user is **always tables, in this fixed order, with no prose between them** — at most one short line under a heading. Write in the user's language and in plain words they recognise from the app, not in the shorthand you or the subagents used while working; never compress findings further on the way to the user. Translate the column names into short everyday words (in German: Nr · Prio · Wo · Was du tust · Was passiert · Richtig wäre · Warum es stört · Lösung / Optionen · Beweis; C: Warum lassen; not checked: Warum nicht · So prüfst du es). Each cell stays short (a few words up to one sentence); details live in `findings.md` and the HTML report.
 
 1. **Overview** — one line: items checked · A fix · B decide · C leave · not checked.
 2. **A – Fix** (clear bugs and rule violations), sorted by priority:
 
-   | No. | Prio | Area | You do | Happens | Expected | Why it matters | Proposed fix | Proof |
+   | No. | Prio | Where | What you do | What happens | Should be | Why it matters | Fix | Proof |
    |---|---|---|---|---|---|---|---|---|
    | A1 | P1 | Main window › Library › Clip list | Ctrl-click a second clip | only the second stays selected | both selected, like Explorer | multi-delete/move needs the tiny checkboxes | keep selection on Ctrl-click | [S04-07](screenshots/S04-07.png) |
 
-3. **B – Decide** (may be intended or needs a product decision): same columns, but **Options** instead of *Proposed fix* (e.g. "a) confirm dialog · b) undo toast · c) leave").
-4. **C – Leave** (cosmetic or arguably intended), short: `No. | Area | What | Why leave it`.
+3. **B – Decide** (may be intended or needs a product decision): same columns, but **Options** instead of *Fix* (e.g. "a) confirm dialog · b) undo toast · c) leave").
+4. **C – Leave** (cosmetic or arguably intended), short: `No. | Where | What | Why leave it`.
 
-"Area" is the full path to the spot, using the names the user sees in the app, from window or screen down to the control: `Settings › Shortcuts › Reset all shortcuts`, `Popup › Search field`, `Library › Context menu › Move to collection`. The user must be able to find it without asking.
-5. **Not checked** — what was out of reach and how the user can check it: `No. | What | Why not here | How you check it yourself` (global shortcuts, pasting into other apps, tray, device-only features). Test-setup-only issues (mock data, test branch) go here too, marked as such, so they aren't mistaken for app bugs.
+"Where" is the full path to the spot, using the names the user sees in the app, from window or screen down to the control: `Settings › Shortcuts › Reset all shortcuts`, `Popup › Search field`, `Library › Context menu › Move to collection`. The user must be able to find it without asking.
+5. **Not checked** — what was out of reach and how the user can check it: `No. | What | Why not | How you check it` (global shortcuts, pasting into other apps, tray, device-only features). Test-setup-only issues (mock data, test branch) go here too, marked as such, so they aren't mistaken for app bugs.
 6. **One question** to close: which option for each B, and whether A and C are fine (the user can answer with numbers, e.g. "A all, B1 a, B2 c").
 
-"You do" names concrete steps from a start state the user recognises; "Happens" and "Expected" are observable, not technical causes. Priority: P1 core flow, money or data · P2 other screens · P3 variations and polish. "Proof" links the screenshot or video file (relative to the run folder) so the user can open it.
+"What you do" names concrete steps from a start state the user recognises; "What happens" and "Should be" are observable, not technical causes. Priority: P1 core flow, money or data · P2 other screens · P3 variations and polish. "Proof" names the screenshot or video. Chat tables can't show local images, so right after the tables send the proof files of all A and B findings with the file tool (one call, in table order, caption = finding number), and point to `report.html`, which shows the same tables with image and video previews (click to enlarge).
 
 Then also deliver, below the tables:
 
-- The clickable report: `python3 <skill-dir>/scripts/build_report.py <run-dir>` writes `report.html` (filter by status, search, screenshots and videos per item, findings linked). With `--previous <earlier-run-dir>` it compares every screenshot with the same file from that run and marks it unchanged, changed or new, with side-by-side and blink comparison (pixel ratio and diff image if Pillow is installed). For stable comparisons, keep device, size and data the same and freeze the status bar (`xcrun simctl status_bar booted override --time 9:41 --batteryLevel 100`, Android demo mode). Open the report or send it with a file tool.
+- The clickable report: `python3 <skill-dir>/scripts/build_report.py <run-dir> --lang <en|de>` writes `report.html`: the same A/B/C/not-checked tables with image and video previews in the proof column (click to enlarge), then every checklist item (filter by status, search, screenshots and videos per item, findings linked). With `--previous <earlier-run-dir>` it compares every screenshot with the same file from that run and marks it unchanged, changed or new, with side-by-side and blink comparison (pixel ratio and diff image if Pillow is installed). For stable comparisons, keep device, size and data the same and freeze the status bar (`xcrun simctl status_bar booted override --time 9:41 --batteryLevel 100`, Android demo mode). Open the report or send it with a file tool.
 - Paths to `checklist.md`, `findings.md` and the screenshots folder; send the most telling screenshots with a file tool if one is available.
 
 If the project tracks tests or issues somewhere (a status page, an issue tracker), follow its rules for where findings go — but ask before filing anything publicly.

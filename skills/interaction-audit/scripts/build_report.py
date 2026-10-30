@@ -6,7 +6,7 @@ screenshots and videos, and optionally compares every screenshot with the
 same file in a previous run. Writes report.html into the run folder.
 
 Usage:
-    python3 build_report.py <run-dir> [--previous <previous-run-dir>] [--threshold 0.002]
+    python3 build_report.py <run-dir> [--previous <previous-run-dir>] [--lang de] [--threshold 0.002]
 
 Only the standard library is required. If Pillow is installed, changed
 screenshots also get a pixel-difference ratio and a diff image.
@@ -23,6 +23,19 @@ from pathlib import Path
 STATUSES = ["ok", "problem", "blocked", "skipped", "asked", "not reachable", "not applicable", "not supported"]
 MEDIA_RE = re.compile(r"[\w./*\-\[\]]+\.(?:png|jpe?g|gif|webp|mp4|mov|webm)", re.IGNORECASE)
 VIDEO_EXT = {".mp4", ".mov", ".webm"}
+LABELS = {
+    "en": {"A": "A – Fix", "B": "B – Decide", "C": "C – Leave", "N": "Not checked", "no": "No.", "prio": "Prio",
+           "where": "Where", "do": "What you do", "happens": "What happens", "should": "Should be",
+           "why": "Why it matters", "fix": "Fix", "options": "Options", "proof": "Proof", "what": "What",
+           "leave": "Why leave it", "whynot": "Why not", "all": "All checklist items", "findings": "Findings",
+           "summary": "{t} items checked · {a} fix · {b} decide · {c} leave · {n} not checked"},
+    "de": {"A": "A – Beheben", "B": "B – Entscheiden", "C": "C – Lassen", "N": "Nicht geprüft", "no": "Nr", "prio": "Prio",
+           "where": "Wo", "do": "Was du tust", "happens": "Was passiert", "should": "Richtig wäre",
+           "why": "Warum es stört", "fix": "Lösung", "options": "Optionen", "proof": "Beweis", "what": "Was",
+           "leave": "Warum lassen", "whynot": "Warum nicht", "all": "Alle Prüfpunkte", "findings": "Funde",
+           "summary": "{t} Punkte geprüft · {a} beheben · {b} entscheiden · {c} lassen · {n} nicht geprüft"},
+}
+L = LABELS["en"]
 
 
 def split_row(line):
@@ -166,6 +179,86 @@ def render_findings(path):
     return "\n".join(out)
 
 
+def parse_findings(path):
+    """Return findings as dicts with their fields, steps and group letter."""
+    if not path.exists():
+        return []
+    findings, current, key = [], None, None
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("## "):
+            title = line[3:].strip()
+            fid = re.match(r"(F-\d+)", title)
+            current = {"id": fid.group(1) if fid else "", "title": title[len(fid.group(1)):].strip() if fid else title,
+                       "fields": {}, "steps": []}
+            findings.append(current)
+            key = None
+            continue
+        if current is None:
+            continue
+        field = re.match(r"^- ([^:]+):\s*(.*)$", line)
+        if field:
+            key = field.group(1).strip().lower()
+            current["fields"][key] = field.group(2).strip()
+        elif key == "steps" and re.match(r"^\s+(\d+\.|-)\s", line):
+            current["steps"].append(re.sub(r"^\s+(\d+\.|-)\s", "", line))
+    for f in findings:
+        if "where" in f["fields"]:
+            f["fields"]["where"] = re.sub(r",?\s*item\s+\S+\s*$", "", f["fields"]["where"])
+        group = f["fields"].get("group", "").strip()[:1].upper()
+        f["group"] = group if group in "ABC" and group else "A"
+        prio = re.search(r"P[123]", f["fields"].get("prio", "") + " " + f["fields"].get("priority", ""))
+        f["prio"] = prio.group(0) if prio else ""
+        f["fix"] = next((v for k, v in f["fields"].items() if k.startswith(("fix", "proposed fix", "options"))), "")
+    return findings
+
+
+def preview_html(run_dir, proof):
+    out = []
+    for rel in expand_media(run_dir, proof):
+        if rel.endswith("#missing"):
+            out.append(f'<span class="missing">missing: {html.escape(rel[:-8])}</span>')
+        elif Path(rel).suffix.lower() in VIDEO_EXT:
+            out.append(f'<video class="thumb" src="{html.escape(rel)}" controls preload="metadata"></video>')
+        else:
+            out.append(f'<img class="thumb" src="{html.escape(rel)}" loading="lazy" alt="{html.escape(rel)}">')
+    return "".join(out)
+
+
+def summary_tables(run_dir, findings, sections):
+    def cell(text):
+        return f"<td>{inline_md(text)}</td>"
+
+    parts = []
+    labels = {g: L[g] for g in "ABC"}
+    for group in "ABC":
+        rows = [f for f in findings if f["group"] == group]
+        if not rows:
+            continue
+        rows.sort(key=lambda f: f["prio"] or "P9")
+        if group == "C":
+            head = f"<tr><th>{L['no']}</th><th>{L['where']}</th><th>{L['what']}</th><th>{L['leave']}</th></tr>"
+            body = "".join(
+                f'<tr><td><a href="#{f["id"]}">C{i}</a></td>{cell(f["fields"].get("where", ""))}{cell(f["title"])}'
+                f'{cell(f["fields"].get("why it matters", ""))}</tr>' for i, f in enumerate(rows, 1))
+        else:
+            fix = L["fix"] if group == "A" else L["options"]
+            head = (f"<tr><th>{L['no']}</th><th>{L['prio']}</th><th>{L['where']}</th><th>{L['do']}</th>"
+                    f"<th>{L['happens']}</th><th>{L['should']}</th><th>{L['why']}</th><th>{fix}</th><th>{L['proof']}</th></tr>")
+            body = "".join(
+                f'<tr><td><a href="#{f["id"]}">{group}{i}</a></td>{cell(f["prio"])}{cell(f["fields"].get("where", ""))}'
+                f'{cell(" → ".join(f["steps"]) or f["fields"].get("steps", ""))}{cell(f["fields"].get("actual", ""))}'
+                f'{cell(f["fields"].get("expected", ""))}{cell(f["fields"].get("why it matters", ""))}{cell(f["fix"])}'
+                f'<td class="proof">{preview_html(run_dir, f["fields"].get("proof", ""))}</td></tr>'
+                for i, f in enumerate(rows, 1))
+        parts.append(f'<h2>{labels[group]}</h2><div class="tablewrap"><table>{head}{body}</table></div>')
+    unchecked = [i for s in sections for i in s["items"] if i["status"] in {"blocked", "not reachable"}]
+    if unchecked:
+        body = "".join(f'<tr><td>N{n}</td>{cell(i["what"])}{cell(i["result"])}</tr>' for n, i in enumerate(unchecked, 1))
+        parts.append(f'<h2>{L["N"]}</h2><div class="tablewrap"><table><tr><th>{L["no"]}</th><th>{L["what"]}</th>'
+                     f'<th>{L["whynot"]}</th></tr>{body}</table></div>')
+    return "".join(parts)
+
+
 def media_html(run_dir, rel, cmp):
     if rel.endswith("#missing"):
         return f'<div class="media missing">missing: {html.escape(rel[:-8])}</div>'
@@ -192,7 +285,7 @@ def media_html(run_dir, rel, cmp):
 CSS = """
 :root{--bg:#fff;--fg:#1d1d1f;--muted:#6e6e73;--card:#f5f5f7;--line:#d2d2d7;--ok:#1a7f37;--problem:#cf222e;--warn:#9a6700;--info:#0969da}
 @media (prefers-color-scheme:dark){:root{--bg:#111;--fg:#f5f5f7;--muted:#a1a1a6;--card:#1c1c1e;--line:#3a3a3c;--ok:#3fb950;--problem:#ff6b6b;--warn:#d29922;--info:#58a6ff}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+a{color:var(--info)}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 main{max-width:1100px;margin:0 auto;padding:24px 16px}h1{font-size:24px;margin:0 0 4px}.muted{color:var(--muted)}
 .stats{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}.stats button{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px;padding:4px 12px;cursor:pointer}
 .stats button.active{outline:2px solid var(--info)}input[type=search]{width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg)}
@@ -204,6 +297,11 @@ details{border:1px solid var(--line);border-radius:12px;margin:12px 0;background
 .media img,.media video{max-height:320px;max-width:100%;border-radius:8px;border:1px solid var(--line)}.missing{color:var(--problem)}
 .pair{display:flex;gap:8px;flex-wrap:wrap}.pair figure{margin:0}.pair figcaption{font-size:12px}
 .cmp{font-size:12px;font-weight:600}.cmp-changed{color:var(--problem)}.cmp-new{color:var(--info)}.cmp-same{color:var(--ok)}
+.tablewrap{overflow-x:auto;margin:8px 0 20px}table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--card)}
+.thumb{max-width:140px;max-height:140px;border-radius:6px;border:1px solid var(--line);cursor:zoom-in;display:block;margin-bottom:4px}
+#lb{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;cursor:zoom-out;z-index:9}
+#lb img{max-width:95vw;max-height:95vh}
 .blink button{margin-right:8px}.findings h3{margin-top:20px}code{font-family:ui-monospace,monospace;font-size:13px}
 """
 
@@ -215,6 +313,8 @@ i.style.display=okS&&i.textContent.toLowerCase().includes(q)?'':'none'});
 document.querySelectorAll('details.screen').forEach(d=>{d.style.display=[...d.querySelectorAll('.item')].some(i=>i.style.display!=='none')?'':'none'})}
 document.querySelectorAll('.stats button').forEach(b=>b.onclick=()=>{filter=b.dataset.f;document.querySelectorAll('.stats button').forEach(x=>x.classList.toggle('active',x===b));apply()});
 document.getElementById('q').oninput=apply;
+const lb=document.getElementById('lb');document.querySelectorAll('img.thumb,.media img').forEach(i=>i.addEventListener('click',e=>{e.preventDefault();lb.querySelector('img').src=i.src;lb.style.display='flex'}));
+lb.onclick=()=>{lb.style.display='none'};
 document.querySelectorAll('.blink').forEach(w=>{const btn=w.querySelector('button');const img=w.previousElementSibling.querySelectorAll('img')[1];let t=null;
 btn.onclick=()=>{if(t){clearInterval(t);t=null;img.src=w.dataset.b;btn.textContent='Blink compare';return}
 let a=false;t=setInterval(()=>{a=!a;img.src=a?w.dataset.a:w.dataset.b},600);btn.textContent='Stop'}});
@@ -226,6 +326,7 @@ def build(run_dir, prev_dir, threshold):
     if not checklist.exists():
         sys.exit(f"No checklist.md in {run_dir}")
     sections = parse_checklist(checklist)
+    findings = parse_findings(run_dir / "findings.md")
     title = next((l[2:].strip() for l in checklist.read_text(encoding="utf-8").splitlines() if l.startswith("# ")), run_dir.name)
 
     counts, changed_total, body = {}, 0, []
@@ -252,6 +353,9 @@ def build(run_dir, prev_dir, threshold):
                     f'<span class="muted">· {len(section["items"])} items · {problems} problems</span></summary>{"".join(rows)}</details>')
 
     total = sum(counts.values())
+    groups = {}
+    for f in findings:
+        groups[f["group"]] = groups.get(f["group"], 0) + 1
     buttons = [f'<button data-f="all" class="active">all {total}</button>']
     buttons += [f'<button data-f="{s}">{html.escape(s)} {n}</button>' for s, n in sorted(counts.items(), key=lambda x: -x[1])]
     if prev_dir:
@@ -260,11 +364,13 @@ def build(run_dir, prev_dir, threshold):
 
     page = f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Interaction audit</title><style>{CSS}</style></head><body><main>
-<h1>{html.escape(title)}</h1><div class="muted">{total} items{compared}</div>
+<h1>{html.escape(title)}</h1><div class="muted">{L["summary"].format(t=total, a=groups.get("A", 0), b=groups.get("B", 0), c=groups.get("C", 0), n=counts.get("blocked", 0) + counts.get("not reachable", 0))}{compared}</div>
+{summary_tables(run_dir, findings, sections)}
+<h2>{L["all"]}</h2>
 <div class="stats">{''.join(buttons)}</div><input id="q" type="search" placeholder="Filter by text, ID or file">
 {''.join(body)}
-<section class="findings"><h2>Findings</h2>{render_findings(run_dir / 'findings.md')}</section>
-</main><script>{JS}</script></body></html>"""
+<section class="findings"><h2>{L['findings']}</h2>{render_findings(run_dir / 'findings.md')}</section>
+</main><div id="lb"><img alt=""></div><script>{JS}</script></body></html>"""
     out = run_dir / "report.html"
     out.write_text(page, encoding="utf-8")
     print(json.dumps({"report": str(out), "items": total, "counts": counts, "changed": changed_total if prev_dir else None}))
@@ -274,8 +380,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("run_dir", type=Path)
     parser.add_argument("--previous", type=Path, help="previous run folder to compare screenshots with")
+    parser.add_argument("--lang", choices=sorted(LABELS), default="en", help="language of headings and column names")
     parser.add_argument("--threshold", type=float, default=0.002, help="changed-pixel ratio still counted as unchanged (Pillow only)")
     args = parser.parse_args()
+    global L
+    L = LABELS[args.lang]
     prev = args.previous.resolve() if args.previous else None
     if prev and not prev.is_dir():
         sys.exit(f"Previous run not found: {prev}")
