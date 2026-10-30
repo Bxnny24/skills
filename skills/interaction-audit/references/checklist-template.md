@@ -39,7 +39,7 @@ Legend: ok · problem (→ F-ID) · blocked · skipped (destructive) · asked ·
 
 ## F-001 <short title>
 - Severity: critical (crash, data loss, core flow blocked) | high (major feature broken) | medium (friction, workaround exists) | low (polish)
-- Category: crash · dead control · wrong text · layout · animation · state · feedback · accessibility · performance
+- Category: crash · dead control · wrong text · layout · animation · state · feedback · accessibility · design · performance
 - Where: <screen>, item <ID>
 - Start state: <e.g. fresh install, 3 clips, offline>
 - Steps:

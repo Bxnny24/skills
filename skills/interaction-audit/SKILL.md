@@ -39,6 +39,7 @@ Argument: the platform or area to cover (`mobile`, `ios`, `android`, `web`, `ext
    - Desktop app (Tauri, Electron, native; macOS or Windows): [references/desktop.md](references/desktop.md)
 4. Create the run folder outside the product repositories (scratchpad or a private notes folder): `interaction-audit-<platform>-<YYYY-MM-DD>/` with `checklist.md`, `findings.md` and `screenshots/`. Copy the templates from [references/checklist-template.md](references/checklist-template.md).
 5. Build and launch the app; take a baseline screenshot.
+6. **Find the design language** and write the design profile (system language such as HIG/Liquid Glass, Material 3 or Fluent; the app's own tokens for spacing, radii, type, colour, materials, icons and motion; which design skill was used to build it). Load the matching design skill as the rubric if one is available. See [references/design-language.md](references/design-language.md). Without a profile, spacing and animation findings are just taste.
 
 ### 2. Inventory — from code *and* from the running app
 
@@ -59,14 +60,14 @@ For every checklist item:
 1. Bring the app to the item's starting state.
 2. Perform the interaction with the platform's tool.
 3. Screenshot the result (and the intermediate state for animations or multi-step flows) into `screenshots/` with a name matching the item ID, e.g. `S03-07-long-press-menu.png`. For animations, transitions, jank or anything timing-related, record a short video instead (`xcrun simctl io booted recordVideo`, `adb shell screenrecord`, the browser's or OS's screen recording, `agent-device record`), because a still frame can't prove an animation is broken.
-4. Compare with the expected result: right screen, right text, animation completes, no freeze, no console/log errors, state persists after leaving and returning. Then run the visual check from [references/visual-check.md](references/visual-check.md) on the screenshot: clipped or cut-off text, broken, stretched or blurry images, containers cut off or overlapping, content under the notch, keyboard or system bars. Zoom into edges instead of judging the whole screen at a glance.
+4. Compare with the expected result: right screen, right text, animation completes, no freeze, no console/log errors, state persists after leaving and returning. Then run the visual check from [references/visual-check.md](references/visual-check.md) on the screenshot: clipped or cut-off text, broken, stretched or blurry images, containers cut off or overlapping, content under the notch, keyboard or system bars. Zoom into edges instead of judging the whole screen at a glance. Compare spacing, type, colours, shapes, icons and motion against the design profile.
 5. Mark the item: `ok`, `problem` (link the finding), `blocked` (say what blocks it), `skipped (destructive)`, `asked`, or `not reachable`.
 
 After a crash or hang, collect the evidence before relaunching: the crash report (Simulator/macOS: `~/Library/Logs/DiagnosticReports/`; device: Xcode Organizer or `devicectl`; Android: `adb logcat -b crash`; Windows: Event Viewer → Application; web: console and network), plus the log lines around the timestamp.
 
 When something is wrong, write the finding immediately in `findings.md` (template in the checklist reference) with severity, exact repro steps from a known start state, expected vs actual, screenshot paths and relevant log lines. Then continue — don't stop to fix unless the user asked you to; a blocker that hides the rest of the app is the exception (report it and ask).
 
-Watch for these problem classes in particular: crash or hang, dead control (nothing happens), wrong or untranslated text, truncated text, broken or distorted images, clipped or overlapping containers, content under system UI, broken or janky animation, state lost after navigation, missing feedback (no spinner, no confirmation), inconsistent behaviour between similar controls, accessibility gaps (unlabeled buttons, too small targets, unreadable in dark mode or large text).
+Watch for these problem classes in particular: crash or hang, dead control (nothing happens), wrong or untranslated text, truncated text, broken or distorted images, clipped or overlapping containers, content under system UI, broken or janky animation, state lost after navigation, missing feedback (no spinner, no confirmation), inconsistent behaviour between similar controls, deviations from the design profile (spacing off the scale, wrong type style, hard-coded colours, foreign icons, non-native or inconsistent animations), accessibility gaps (unlabeled buttons, too small targets, unreadable in dark mode or large text).
 
 ### 4. Report
 
@@ -79,7 +80,7 @@ Finish with:
 
 If the project tracks tests or issues somewhere (a status page, an issue tracker), follow its rules for where findings go — but ask before filing anything publicly.
 
-Offer, don't do unasked: turning the checklist's most important flows into automated UI tests in the framework the project already uses (XCUITest, Espresso/Compose tests, Maestro, Playwright), so the next audit only needs to cover what automation can't.
+Offer, don't do unasked: fixing the design findings with the profile's tokens and the rubric skill (before/after screenshots as proof); turning the checklist's most important flows into automated UI tests in the framework the project already uses (XCUITest, Espresso/Compose tests, Maestro, Playwright), so the next audit only needs to cover what automation can't.
 
 ## Optional helper: agent-device
 
