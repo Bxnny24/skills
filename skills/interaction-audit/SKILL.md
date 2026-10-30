@@ -14,34 +14,41 @@ Argument: the platform or area to cover (`mobile`, `ios`, `android`, `web`, `ext
 - **Full** (default): the whole app on the chosen platform.
 - **Changed** (`changed`, "only what this PR touches", after a branch or diff): derive the affected screens from `git diff <base>...HEAD` (UI files, routes, strings, shared components and everything that uses them), audit those fully and smoke-check the main flow of every other screen. Say in the report which screens were out of scope.
 - **Release** (`release`, "before submitting to the store"): full mode plus the store and legal checks in [references/store-and-legal.md](references/store-and-legal.md) and the oldest supported OS/browser versions.
+- **Scope is a contract.** Whatever the user chose (platform, build, "browser version only", "everything incl. right click") is what you audit and what you report on. Don't pad the result with other areas; list out-of-scope things you noticed in one short section at the end.
 - **Resume**: if a `checklist.md` from an earlier run exists for the same platform and build, continue from its first open item instead of starting over; re-run items marked `problem` when the build changed.
 
 ## Ground rules
 
 - **Safe by default.** Never perform destructive or outward-facing actions without asking first in chat: purchases or subscriptions, sending real messages/emails/posts, deleting real user data, unpairing or signing out of real accounts, resetting settings, granting system permissions on the user's own device, changing account settings. Open the confirmation dialog, screenshot it, then **cancel** and mark the item `asked` or `skipped (destructive)`. Prefer test data and simulators; create throwaway test content yourself and delete only what you created.
 - **Real behaviour over code.** The code tells you *what exists*; only the running app tells you *whether it works*. Never mark an item done from reading code.
-- **One thing at a time.** Stateful UI (focus, sheets, text fields, navigation stack) gets polluted by parallel actions. Drive serially; return to a known state after each item.
+- **One thing at a time per instance.** Stateful UI (focus, sheets, text fields, navigation stack) gets polluted by parallel actions. Within one app instance, drive serially and return to a known state after each item. For large apps (hundreds of controls), split the work by area across subagents only if each one gets its **own** instance — its own browser tab, simulator or emulator — and its own test data, with nothing shared that one could change under another (same account, same local database). Give each agent the checklist section, the design profile and the findings template; the main session merges the results and **re-checks every finding itself** before reporting it.
+- **Don't take over the user's machine.** Computer-use moves the real mouse and keyboard. If the user may be working on the same computer, ask before driving native windows with it; offer the browser or web-view build, a simulator, or a VM instead, and collect what truly needs the native app as a user-driven list.
 - **Write as you go.** Update the checklist and findings after every item, not at the end — a long run may be interrupted or summarized.
 
 ## Workflow
 
 ### 1. Prepare
 
-1. Read the project's own instructions and any `run`/launch skill or `.claude/launch.json` to learn how to build and start the app.
-2. **Check what this environment can actually run** before planning anything. The same request means different things on a Mac, on Windows, in a cloud sandbox:
+1. Read the project's own instructions and any `run`/launch skill or `.claude/launch.json` to learn how to build and start the app. Note any **UX rules** they state (e.g. "disabled controls always get a tooltip with the reason", "paid features are shown disabled, never hidden", "destructive actions ask first") — they are part of the rubric, and breaking them is a finding.
+2. **Agree on scope before starting**, in one short round of questions if the request doesn't already answer them:
+   - What to audit: whole app, an area, or what a branch/PR changed — and which interaction kinds (e.g. "everything including right-click menus").
+   - Which build: `main`, a branch, or several unmerged fixes together. To test unmerged work together, merge it into a **local test branch** (e.g. `test/audit-<date>`), never push it, and delete it at the end; resolve conflicts there, not on the real branches.
+   - How to drive it: native app, browser/web-view build, simulator, real device — and whether you may take over mouse and keyboard (see ground rules).
+   - Which test data: seed/fixture data, a mocked backend, debug parameters for plans and states.
+3. **Check what this environment can actually run** before planning anything. The same request means different things on a Mac, on Windows, in a cloud sandbox:
    - Host OS (`uname -s` / `$env:OS`) and what is installed: `xcrun simctl list devices` and `xcrun devicectl list devices` (iOS, macOS only), `adb devices` and `emulator -list-avds` (Android), the project's dev command.
    - Which driving tools this session has (loaded or deferred): iOS Simulator tool, built-in browser, Claude in Chrome, computer-use, `agent-device`, Playwright/Maestro in the project.
    - What the project targets and pins: deployment target, a simulator or device named in its instructions, launch configs, memory notes.
    - The oldest and newest OS / browser versions the app supports, and which of them are installed here (see the version table in [references/environments.md](references/environments.md)).
    Write a short capability table at the top of `checklist.md` (platform → device/simulator → driving tool → available yes/no). [references/environments.md](references/environments.md) has the matrix of which target runs on which host (iOS only on macOS, Windows apps only on Windows, Android emulators need virtualisation, …). If the requested platform cannot run here, do not improvise: say so, offer the fallbacks listed there, and let the user choose. Platforms that *can* run here (e.g. the web part of the same app) may proceed meanwhile.
-3. Pick the platform reference and read it now:
+4. Pick the platform reference and read it now:
    - iOS (Simulator or real iPhone): [references/ios.md](references/ios.md)
    - Android: [references/android.md](references/android.md)
    - Web app or browser extension: [references/web-and-extension.md](references/web-and-extension.md)
    - Desktop app (Tauri, Electron, native; macOS or Windows): [references/desktop.md](references/desktop.md)
-4. Create the run folder outside the product repositories (scratchpad or a private notes folder): `interaction-audit-<platform>-<YYYY-MM-DD>/` with `checklist.md`, `findings.md` and `screenshots/`. Copy the templates from [references/checklist-template.md](references/checklist-template.md).
-5. Build and launch the app; take a baseline screenshot.
-6. **Find the design language** and write the design profile (system language such as HIG/Liquid Glass, Material 3 or Fluent; the app's own tokens for spacing, radii, type, colour, materials, icons and motion; which design skill was used to build it). Load the matching design skill as the rubric if one is available. See [references/design-language.md](references/design-language.md). Without a profile, spacing and animation findings are just taste.
+5. Create the run folder outside the product repositories (scratchpad or a private notes folder): `interaction-audit-<platform>-<YYYY-MM-DD>/` with `checklist.md`, `findings.md` and `screenshots/`. Copy the templates from [references/checklist-template.md](references/checklist-template.md).
+6. Build and launch the app; take a baseline screenshot.
+7. **Find the design language** and write the design profile (system language such as HIG/Liquid Glass, Material 3 or Fluent; the app's own tokens for spacing, radii, type, colour, materials, icons and motion; which design skill was used to build it). Load the matching design skill as the rubric if one is available. See [references/design-language.md](references/design-language.md). Without a profile, spacing and animation findings are just taste.
 
 ### 2. Inventory — from code *and* from the running app
 
@@ -77,12 +84,23 @@ Watch for these problem classes in particular: crash or hang, dead control (noth
 
 ### 4. Report
 
-Finish with:
+Write the summary for the user in **their language and in plain words**, not in the shorthand you or the subagents used while working — never compress findings further on the way to the user. Explain every finding as a small story: *what you do* (steps from a start state they recognise), *what happens*, *what you'd expect instead* and *why it matters* (who trips over it, what it costs them). One finding per numbered item, no jargon, no internal IDs as the only description.
+
+Group the findings by what the user has to do with them:
+
+- **A – Fix:** clear bugs and rule violations; say you'd fix them and ask for a go-ahead.
+- **B – Decide:** behaviour that may be intended or needs a product decision (missing confirmations, hidden vs. disabled features, wording); describe the options briefly.
+- **C – Leave:** cosmetic or arguably intended; one line each, so the user can veto.
+
+End with one clear question: which of B they want how, and whether A and C are fine.
+
+Then also deliver:
 
 - The clickable report: `python3 <skill-dir>/scripts/build_report.py <run-dir>` writes `report.html` (filter by status, search, screenshots and videos per item, findings linked). With `--previous <earlier-run-dir>` it compares every screenshot with the same file from that run and marks it unchanged, changed or new, with side-by-side and blink comparison (pixel ratio and diff image if Pillow is installed). For stable comparisons, keep device, size and data the same and freeze the status bar (`xcrun simctl status_bar booted override --time 9:41 --batteryLevel 100`, Android demo mode). Open the report or send it with a file tool.
 - Coverage numbers: total items, ok, problem, blocked, skipped, not reachable — per screen.
 - The findings, most severe first.
-- What was **not** covered and why, plus the residual risk.
+- What was **not** covered and why, plus the residual risk — including a short list of what can only be checked in the real app or on a device (global shortcuts, pasting into other apps, tray/menu bar, system dialogs) as steps the user can do themselves.
+- Anything that only concerns the test setup (mock data, test branch) separately, so it isn't mistaken for an app bug.
 - Paths to `checklist.md`, `findings.md` and the screenshots folder; send the most telling screenshots with a file tool if one is available.
 
 If the project tracks tests or issues somewhere (a status page, an issue tracker), follow its rules for where findings go — but ask before filing anything publicly.

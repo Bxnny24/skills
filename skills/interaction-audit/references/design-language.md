@@ -25,6 +25,7 @@ Put it at the top of `checklist.md` (or a `design-profile.md` beside it):
 - Icons: … · Components: native vs. custom (which)
 - Motion: durations, curves/springs, which transitions are native, reduced-motion behaviour
 - Platform conventions the app deliberately breaks (and why, if documented)
+- Project UX rules (from the project's instructions, design docs or the user): e.g. disabled controls explain why in a tooltip; locked paid features stay visible but disabled; destructive actions confirm or offer undo
 ```
 
 ## 3. Load a rubric skill instead of re-inventing one
