@@ -47,12 +47,28 @@ Both browsers can click, type, screenshot and read the page; pick per job, and u
 
 Tauri renders in WKWebView (macOS) or WebView2 (Windows, Chromium-based), Electron in its own Chromium: the browser pass covers layout and logic of the frontend, but native windows, menus, tray, global shortcuts and the Rust/Node side still need the real app with computer-use.
 
+## Several browsers
+
+Which browsers and how deep is a question for the upfront round. The default recommendation:
+
+| Browser group | Engine | Depth | Why |
+|---|---|---|---|
+| One Chromium browser (Chrome, or the one the users mostly use) | Blink | full pass | the reference run |
+| Other Chromium browsers: Edge, Brave, Opera, Arc, Vivaldi | Blink | main flows and the points below | rendering is nearly identical; differences come from the browser around the page |
+| Firefox | Gecko | full pass if supported | other engine: layout, form controls, date pickers, animations, `browser.*` extension APIs |
+| Safari (macOS, and iOS in the Simulator) | WebKit | full pass if supported | other engine, strictest about storage, autoplay, popups and extension rules |
+
+What to check in the other Chromium browsers: the extension's install path, store page and pinning (Edge Add-ons, Opera add-ons), Edge's sidebar and vertical tabs, built-in blockers (Brave Shields, Edge tracking prevention) breaking scripts, cookies or sign-in redirects, built-in translate, reader mode and autofill changing the page, and keyboard shortcuts the browser itself already uses.
+
+Driving them: Claude in Chrome can drive every Chromium browser in which its extension is installed and connected (list the connected browsers and switch between them); check this in the environment step rather than assuming it. Firefox and Safari need Playwright (`firefox`, `webkit` as a Safari approximation), Safari in the iOS Simulator, or the real browser through computer-use. A browser that is supported but can't be driven here goes into *Not checked* with how the user can check it.
+
 ## Helpers worth suggesting
 
 When a tool or setup that isn't there yet would cover more, or the same with less effort, **suggest it in the upfront round** with what it unlocks, its cost (download size, time, account) and your recommendation. Never install, enable or sign up yourself without approval; without it, the run uses what is there and the report lists what the helper would have covered.
 
 | Missing here | Suggest | Unlocks |
 |---|---|---|
+| A browser the user chose isn't installed, or Claude in Chrome isn't added to it | installing that browser, adding the Claude in Chrome extension there, or Playwright's `firefox`/`webkit` | the browser passes |
 | Claude in Chrome not connected, but the target is a browser extension or needs real Chrome | install or connect the Claude in Chrome extension | extension popup, options, content scripts, real Chrome |
 | computer-use not enabled, native desktop items in scope | enabling computer-use (and screen-recording / accessibility access when the OS asks) | native windows, menus, tray, drag and drop, global shortcuts |
 | Android target, no emulator set up (Windows, Mac or Linux) | Android Studio with an AVD for the newest API and one for `minSdk`; on Windows enable WHPX/Hyper-V | the whole Android pass |
