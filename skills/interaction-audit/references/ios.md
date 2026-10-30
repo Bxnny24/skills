@@ -21,7 +21,7 @@ Simulator and Xcode exist only on macOS: on Windows or Linux an iOS app can't be
 - Gestures: `.contextMenu`, `.onLongPressGesture`, `LongPressGesture`, `DragGesture`, `.swipeActions`, `.refreshable`, `.onDelete`, `.onMove`, `.draggable`, `.dropDestination`, `MagnificationGesture`.
 - Feedback: `.alert`, `.confirmationDialog`, toasts/banners, `ProgressView`, `ContentUnavailableView` (empty states).
 - Text input: `TextField`, `SecureField`, `TextEditor`, `.searchable`, `.focused`, `.submitLabel`, `.onSubmit`.
-- Entry points outside the app: `onOpenURL`, `Info.plist` `CFBundleURLTypes` (URL schemes), universal links, `AppIntent` / App Shortcuts, widgets, share extension, Control Center controls, notifications (`UNUserNotificationCenter`), Spotlight, Handoff.
+- Entry points outside the app: `onOpenURL`, `Info.plist` `CFBundleURLTypes` (URL schemes), universal links, `AppIntent` / App Shortcuts, widgets, share extension, Control Center controls, notifications (`UNUserNotificationCenter`), Spotlight, Handoff. How to exercise them (and which need a team-signed build on a device) is in [system-entry-points.md](system-entry-points.md).
 - Permissions: `NS*UsageDescription` keys in `Info.plist`, `requestAuthorization`, local network, camera, photos, notifications, pasteboard access.
 - Settings bundle (`Settings.bundle`) – appears in the system Settings app.
 

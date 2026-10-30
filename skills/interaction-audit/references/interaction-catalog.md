@@ -75,7 +75,8 @@ Walk this catalog during the inventory and turn every entry that applies to the 
 
 ## I. System integration and hardware
 - Share sheet in and out, open-in / file associations, Files / document picker, print, export.
-- Widgets (add, configure, tap, sizes), Live Activities / ongoing notifications, App Shortcuts / Siri / Spotlight, Control Center or Quick Settings tiles, Handoff / continuity, AirDrop, clipboard sync across devices.
+- Entry points outside the app's UI — Shortcuts / App Intents, Siri, Spotlight, Action button, automations, widgets, Control Center and Quick Settings controls, Live Activities, share and action extensions, launcher and Home Screen quick actions, jump lists, PWA shortcuts, extension commands: each in killed, background, foreground and locked state, see [system-entry-points.md](system-entry-points.md).
+- Handoff / continuity, AirDrop, clipboard sync across devices.
 - Notifications: received in foreground, background and killed state; actions on the notification; badge counts; grouping; tapping opens the right screen.
 - Hardware the app uses: camera (front/back, denied), microphone, location (precise/approximate/denied/while using), Bluetooth, NFC, biometrics (Face ID / Touch ID / fingerprint success, failure, not enrolled — Simulator: Features → Face ID), haptics, sound with silent switch on/off and headphones connected/disconnected.
 - Permission changed while the app runs (revoked in Settings, then return to the app).
