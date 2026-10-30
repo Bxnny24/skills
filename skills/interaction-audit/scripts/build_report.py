@@ -3,7 +3,9 @@
 
 Reads checklist.md and findings.md from a run folder, links the proof
 screenshots and videos, and optionally compares every screenshot with the
-same file in a previous run. Writes report.html into the run folder.
+same file in a previous run. Writes summary.md (the user-facing result
+tables with image previews) and report.html (the same tables plus every
+checklist item) into the run folder.
 
 Usage:
     python3 build_report.py <run-dir> [--previous <previous-run-dir>] [--lang de] [--threshold 0.002]
@@ -27,12 +29,12 @@ LABELS = {
     "en": {"A": "A – Fix", "B": "B – Decide", "C": "C – Leave", "N": "Not checked", "no": "No.", "prio": "Prio",
            "where": "Where", "do": "What you do", "happens": "What happens", "should": "Should be",
            "why": "Why it matters", "fix": "Fix", "options": "Options", "proof": "Proof", "what": "What",
-           "leave": "Why leave it", "whynot": "Why not", "all": "All checklist items", "findings": "Findings",
+           "leave": "Why leave it", "whynot": "Why not", "howcheck": "How you check it", "all": "All checklist items", "findings": "Findings",
            "summary": "{t} items checked · {a} fix · {b} decide · {c} leave · {n} not checked"},
     "de": {"A": "A – Beheben", "B": "B – Entscheiden", "C": "C – Lassen", "N": "Nicht geprüft", "no": "Nr", "prio": "Prio",
            "where": "Wo", "do": "Was du tust", "happens": "Was passiert", "should": "Richtig wäre",
            "why": "Warum es stört", "fix": "Lösung", "options": "Optionen", "proof": "Beweis", "what": "Was",
-           "leave": "Warum lassen", "whynot": "Warum nicht", "all": "Alle Prüfpunkte", "findings": "Funde",
+           "leave": "Warum lassen", "whynot": "Warum nicht", "howcheck": "So prüfst du es", "all": "Alle Prüfpunkte", "findings": "Funde",
            "summary": "{t} Punkte geprüft · {a} beheben · {b} entscheiden · {c} lassen · {n} nicht geprüft"},
 }
 L = LABELS["en"]
@@ -259,6 +261,55 @@ def summary_tables(run_dir, findings, sections):
     return "".join(parts)
 
 
+def md_cell(text):
+    return " ".join(str(text).split()).replace("|", "\\|")
+
+
+def md_proof(run_dir, proof):
+    out = []
+    for rel in expand_media(run_dir, proof):
+        if rel.endswith("#missing"):
+            out.append(f"missing: {rel[:-8]}")
+        elif Path(rel).suffix.lower() in VIDEO_EXT:
+            out.append(f"[▶ {Path(rel).name}]({rel})")
+        else:
+            out.append(f'<img src="{rel}" width="160">')
+    return " ".join(out)
+
+
+def summary_markdown(run_dir, title, findings, sections, total, counts, groups):
+    """The user-facing result: overview line and the A/B/C/not-checked tables as Markdown."""
+    unchecked = [i for s in sections for i in s["items"] if i["status"] in {"blocked", "not reachable"}]
+    lines = [f"# {title}", "", L["summary"].format(t=total, a=groups.get("A", 0), b=groups.get("B", 0),
+                                                       c=groups.get("C", 0), n=len(unchecked)), ""]
+    for group in "AB":
+        rows = sorted((f for f in findings if f["group"] == group), key=lambda f: f["prio"] or "P9")
+        if not rows:
+            continue
+        fix = L["fix"] if group == "A" else L["options"]
+        lines += [f"## {L[group]}", "",
+                  f"| {L['no']} | {L['prio']} | {L['where']} | {L['do']} | {L['happens']} | {L['should']} | {L['why']} | {fix} | {L['proof']} |",
+                  "|---|---|---|---|---|---|---|---|---|"]
+        for i, f in enumerate(rows, 1):
+            cells = [f"{group}{i}", f["prio"], f["fields"].get("where", ""), " → ".join(f["steps"]) or f["fields"].get("steps", ""),
+                     f["fields"].get("actual", ""), f["fields"].get("expected", ""), f["fields"].get("why it matters", ""),
+                     f["fix"], md_proof(run_dir, f["fields"].get("proof", ""))]
+            lines.append("| " + " | ".join(md_cell(c) for c in cells) + " |")
+        lines.append("")
+    rows = [f for f in findings if f["group"] == "C"]
+    if rows:
+        lines += [f"## {L['C']}", "", f"| {L['no']} | {L['where']} | {L['what']} | {L['leave']} |", "|---|---|---|---|"]
+        lines += [f"| C{i} | {md_cell(f['fields'].get('where', ''))} | {md_cell(f['title'])} | {md_cell(f['fields'].get('why it matters', ''))} |"
+                  for i, f in enumerate(rows, 1)]
+        lines.append("")
+    if unchecked:
+        lines += [f"## {L['N']}", "", f"| {L['no']} | {L['what']} | {L['whynot']} | {L['howcheck']} |", "|---|---|---|---|"]
+        lines += [f"| N{n} | {md_cell(i['what'])} | {md_cell(i['result'])} | {md_cell(i['expected'])} |"
+                  for n, i in enumerate(unchecked, 1)]
+        lines.append("")
+    return "\n".join(lines)
+
+
 def media_html(run_dir, rel, cmp):
     if rel.endswith("#missing"):
         return f'<div class="media missing">missing: {html.escape(rel[:-8])}</div>'
@@ -373,7 +424,9 @@ def build(run_dir, prev_dir, threshold):
 </main><div id="lb"><img alt=""></div><script>{JS}</script></body></html>"""
     out = run_dir / "report.html"
     out.write_text(page, encoding="utf-8")
-    print(json.dumps({"report": str(out), "items": total, "counts": counts, "changed": changed_total if prev_dir else None}))
+    summary = run_dir / "summary.md"
+    summary.write_text(summary_markdown(run_dir, title, findings, sections, total, counts, groups), encoding="utf-8")
+    print(json.dumps({"report": str(out), "summary": str(summary), "items": total, "counts": counts, "changed": changed_total if prev_dir else None}))
 
 
 def main():

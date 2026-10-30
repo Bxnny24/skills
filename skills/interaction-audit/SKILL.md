@@ -35,6 +35,7 @@ Argument: the platform or area to cover (`mobile`, `ios`, `android`, `web`, `ext
    - Which build: `main`, a branch, or several unmerged fixes together. To test unmerged work together, merge it into a **local test branch** (e.g. `test/audit-<date>`), never push it, and delete it at the end; resolve conflicts there, not on the real branches.
    - How to drive it: native app, browser/web-view build, simulator, real device — and whether you may take over mouse and keyboard (see ground rules).
    - Which test data: seed/fixture data, a mocked backend, debug parameters for plans and states.
+   - How they want the result (see *Deliver*): **1** `report.html` in the browser (recommended), **2** `summary.md` as a file card in the chat, or **3** tables in the chat with the proof images as separate cards. Without an answer, use 1.
 3. **Check what this environment can actually run** before planning anything. The same request means different things on a Mac, on Windows, in a cloud sandbox:
    - Host OS (`uname -s` / `$env:OS`) and what is installed: `xcrun simctl list devices` and `xcrun devicectl list devices` (iOS, macOS only), `adb devices` and `emulator -list-avds` (Android), the project's dev command.
    - Which driving tools this session has (loaded or deferred): iOS Simulator tool, built-in browser, Claude in Chrome, computer-use, `agent-device`, Playwright/Maestro in the project.
@@ -84,7 +85,7 @@ Watch for these problem classes in particular: crash or hang, dead control (noth
 
 ### 4. Report
 
-The result for the user is **always tables, in this fixed order, with no prose between them** — at most one short line under a heading. Write in the user's language and in plain words they recognise from the app, not in the shorthand you or the subagents used while working; never compress findings further on the way to the user. Translate the column names into short everyday words (in German: Nr · Prio · Wo · Was du tust · Was passiert · Richtig wäre · Warum es stört · Lösung / Optionen · Beweis; C: Warum lassen; not checked: Warum nicht · So prüfst du es). Each cell stays short (a few words up to one sentence); details live in `findings.md` and the HTML report.
+The result for the user is **always tables, in this fixed order, with no prose between them**, in the format the user chose (see *Deliver* below) — at most one short line under a heading. Write in the user's language and in plain words they recognise from the app, not in the shorthand you or the subagents used while working; never compress findings further on the way to the user. Translate the column names into short everyday words (in German: Nr · Prio · Wo · Was du tust · Was passiert · Richtig wäre · Warum es stört · Lösung / Optionen · Beweis; C: Warum lassen; not checked: Warum nicht · So prüfst du es). Each cell stays short (a few words up to one sentence); details live in `findings.md` and the HTML report.
 
 1. **Overview** — one line: items checked · A fix · B decide · C leave · not checked.
 2. **A – Fix** (clear bugs and rule violations), sorted by priority:
@@ -95,17 +96,20 @@ The result for the user is **always tables, in this fixed order, with no prose b
 
 3. **B – Decide** (may be intended or needs a product decision): same columns, but **Options** instead of *Fix* (e.g. "a) confirm dialog · b) undo toast · c) leave").
 4. **C – Leave** (cosmetic or arguably intended), short: `No. | Where | What | Why leave it`.
-
-"Where" is the full path to the spot, using the names the user sees in the app, from window or screen down to the control: `Settings › Shortcuts › Reset all shortcuts`, `Popup › Search field`, `Library › Context menu › Move to collection`. The user must be able to find it without asking.
 5. **Not checked** — what was out of reach and how the user can check it: `No. | What | Why not | How you check it` (global shortcuts, pasting into other apps, tray, device-only features). Test-setup-only issues (mock data, test branch) go here too, marked as such, so they aren't mistaken for app bugs.
 6. **One question** to close: which option for each B, and whether A and C are fine (the user can answer with numbers, e.g. "A all, B1 a, B2 c").
 
-"What you do" names concrete steps from a start state the user recognises; "What happens" and "Should be" are observable, not technical causes. Priority: P1 core flow, money or data · P2 other screens · P3 variations and polish. "Proof" names the screenshot or video. Chat tables can't show local images, so right after the tables send the proof files of all A and B findings with the file tool (one call, in table order, caption = finding number), and point to `report.html`, which shows the same tables with image and video previews (click to enlarge).
+"Where" is the full path to the spot, using the names the user sees in the app, from window or screen down to the control: `Settings › Shortcuts › Reset all shortcuts`, `Popup › Search field`, `Library › Context menu › Move to collection`. The user must be able to find it without asking. "What you do" names concrete steps from a start state the user recognises; "What happens" and "Should be" are observable, not technical causes. Priority: P1 core flow, money or data · P2 other screens · P3 variations and polish. "Proof" shows the screenshot itself (`<img src="screenshots/…" width="160">`, which renders in Markdown tables) or links the video.
 
-Then also deliver, below the tables:
+**Deliver:**
 
-- The clickable report: `python3 <skill-dir>/scripts/build_report.py <run-dir> --lang <en|de>` writes `report.html`: the same A/B/C/not-checked tables with image and video previews in the proof column (click to enlarge), then every checklist item (filter by status, search, screenshots and videos per item, findings linked). With `--previous <earlier-run-dir>` it compares every screenshot with the same file from that run and marks it unchanged, changed or new, with side-by-side and blink comparison (pixel ratio and diff image if Pillow is installed). For stable comparisons, keep device, size and data the same and freeze the status bar (`xcrun simctl status_bar booted override --time 9:41 --batteryLevel 100`, Android demo mode). Open the report or send it with a file tool.
-- Paths to `checklist.md`, `findings.md` and the screenshots folder; send the most telling screenshots with a file tool if one is available.
+Run `python3 <skill-dir>/scripts/build_report.py <run-dir> --lang <en|de>` (add `--previous <earlier-run-dir>` to compare screenshots with an earlier run). It writes both `report.html` and `summary.md` with exactly these tables. Read `summary.md` and polish wording, order and the "How you check it" column; the HTML takes the same data. Keep the run folder somewhere the app can open (a session folder or the scratchpad), or previews won't load. Then deliver in the chosen format:
+
+1. **`report.html` (recommended):** the tables with image and video previews in the proof column (click to enlarge), then every checklist item with status filter and search; with `--previous`, every screenshot is marked unchanged, changed or new, with side-by-side and blink comparison (pixel ratio and diff image if Pillow is installed). Open it in the browser pane or send it with the file tool (`display: "render"`). If the user is away from the computer (remote control, phone), local files won't open there: offer to publish the report as a private artifact, and only do so after they agree, since it uploads their app's screenshots.
+2. **`summary.md`:** send it with the file tool so it renders as a card; the proof column shows the images (`<img src="screenshots/…" width="160">`).
+3. **Tables in the chat:** paste the tables into the chat with file names in the proof column, then send the proof files of all A and B findings with the file tool, in table order, caption = finding number.
+
+In every format, the chat text itself is only the overview line, the closing question and one line pointing to the other files (`checklist.md`, `findings.md`, screenshots folder, and `report.html` if it wasn't the chosen format). For stable screenshot comparisons across runs, keep device, size and data the same and freeze the status bar (`xcrun simctl status_bar booted override --time 9:41 --batteryLevel 100`, Android demo mode).
 
 If the project tracks tests or issues somewhere (a status page, an issue tracker), follow its rules for where findings go — but ask before filing anything publicly.
 
