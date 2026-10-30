@@ -25,6 +25,8 @@ Legend: ok · problem (→ F-ID) · blocked · skipped (destructive) · asked ·
 | X-01 | Dark mode | all | ok | screenshots/X-01-*.png |
 | X-02 | Largest text size | S01–S05 | problem → F-004 | … |
 | X-03 | Offline / peer unreachable | sync, settings | … | … |
+| X-04 | Smallest size (iPhone SE) | all | … | … |
+| X-05 | Tablet landscape (iPad) | all | not supported | – |
 
 ## Found in code but not on screen
 - <file:line> – <what> – <why not reachable>

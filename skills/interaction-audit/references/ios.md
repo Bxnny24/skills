@@ -8,7 +8,7 @@
 
 ## Choosing the simulator
 
-Use the simulator or device the project names (instructions, launch config, memory notes, CI workflow). Otherwise pick a booted one, else the newest iPhone runtime from `xcrun simctl list devices available`, and check it meets the app's deployment target. Add one small (e.g. iPhone SE) and one large device for layout items, and an iPad only if the app supports iPad. Record the exact device and iOS version in the checklist header.
+Use the simulator or device the project names (instructions, launch config, memory notes, CI workflow). Otherwise pick a booted one, else the newest iPhone runtime from `xcrun simctl list devices available`, and check it meets the app's deployment target. For the size passes (small, large, iPad if supported) follow [screen-sizes.md](screen-sizes.md). Record the exact device and iOS version in the checklist header.
 
 ## Not on a Mac (Windows, Linux, cloud sandbox)
 
