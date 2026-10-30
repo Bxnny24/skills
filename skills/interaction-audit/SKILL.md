@@ -41,6 +41,7 @@ Argument: the platform or area to cover (`mobile`, `ios`, `android`, `web`, `ext
    - Which driving tools this session has (loaded or deferred): iOS Simulator tool, built-in browser, Claude in Chrome, computer-use, `agent-device`, Playwright/Maestro in the project.
    - What the project targets and pins: deployment target, a simulator or device named in its instructions, launch configs, memory notes.
    - The oldest and newest OS / browser versions the app supports, and which of them are installed here (see the version table in [references/environments.md](references/environments.md)).
+   - **Device access up front.** Some driving tools ask the user once per device or simulator (the iOS Simulator tool does). Request access to every device the size and version passes will need (e.g. the oldest-iOS simulator, the iPad) now, while the user is still at the keyboard; a prompt that comes up later while they are away leaves that whole pass `blocked`.
    Write a short capability table at the top of `checklist.md` (platform → device/simulator → driving tool → available yes/no). [references/environments.md](references/environments.md) has the matrix of which target runs on which host (iOS only on macOS, Windows apps only on Windows, Android emulators need virtualisation, …). If the requested platform cannot run here, do not improvise: say so, offer the fallbacks listed there, and let the user choose. Platforms that *can* run here (e.g. the web part of the same app) may proceed meanwhile.
 4. Pick the platform reference and read it now:
    - iOS (Simulator or real iPhone): [references/ios.md](references/ios.md)
@@ -48,7 +49,7 @@ Argument: the platform or area to cover (`mobile`, `ios`, `android`, `web`, `ext
    - Web app or browser extension: [references/web-and-extension.md](references/web-and-extension.md)
    - Desktop app (Tauri, Electron, native; macOS or Windows): [references/desktop.md](references/desktop.md)
 5. Create the run folder outside the product repositories (scratchpad or a private notes folder): `interaction-audit-<platform>-<YYYY-MM-DD>/` with `checklist.md`, `findings.md` and `screenshots/`. Copy the templates from [references/checklist-template.md](references/checklist-template.md).
-6. Build and launch the app; take a baseline screenshot.
+6. Build and launch the app; take a baseline screenshot. If a debug-only overlay (test-build banner, debug HUD, environment ribbon) covers content, record it once as a finding marked *debug builds only*, then hide or disable it for the rest of the run so it doesn't spoil every screenshot.
 7. **Find the design language** and write the design profile (system language such as HIG/Liquid Glass, Material 3 or Fluent; the app's own tokens for spacing, radii, type, colour, materials, icons and motion; which design skill was used to build it). Load the matching design skill as the rubric if one is available. See [references/design-language.md](references/design-language.md). Without a profile, spacing and animation findings are just taste.
 
 ### 2. Inventory — from code *and* from the running app
@@ -65,6 +66,8 @@ Also list the **states the app can be in** — plans and licences (free, trial, 
 
 Group the checklist by screen. Each item is one interaction with its expected result. Expect dozens to hundreds of items for a real app — that is the point.
 
+**Size the run before starting.** Count the items and estimate the time (a few minutes per item, more for videos and peer setups). If it won't fit into one sitting, say so and agree with the user how to split it: by area into several runs that continue the same `checklist.md`, or a smaller scope. `not reached (time)` is not a result; an item ends up unreached only with a reason the user accepted, and the next run starts from those items.
+
 **Order by risk**, so an interrupted run has still covered what matters most: first the core flows (the reason the app exists), then anything touching money (purchases, licences, paywalls), then anything that can lose or leak data (delete, sync, sign-out, export, permissions), then the rest of the screens, then the cross-cutting variations and states. Mark each item's priority in the checklist and work top-down. Priority uses letters: **A** critical (crash, data loss, money, security) · **B** core flow broken · **C** other screens · **D** polish and variations.
 
 ### 3. Exercise — item by item
@@ -73,7 +76,7 @@ For every checklist item:
 
 1. Bring the app to the item's starting state.
 2. Perform the interaction with the platform's tool.
-3. Screenshot the result (and the intermediate state for animations or multi-step flows) into `screenshots/` with a name matching the item ID, e.g. `S03-07-long-press-menu.png`. For animations, transitions, jank or anything timing-related, record a short video instead (`xcrun simctl io booted recordVideo`, `adb shell screenrecord`, the browser's or OS's screen recording, `agent-device record`), because a still frame can't prove an animation is broken.
+3. Screenshot the result (and the intermediate state for animations or multi-step flows) into `screenshots/` with a name matching the item ID, e.g. `S03-07-long-press-menu.png`. For animations, transitions, jank or anything timing-related, record a short video instead (`xcrun simctl io booted recordVideo`, `adb shell screenrecord`, the browser's or OS's screen recording, `agent-device record`), because a still frame can't prove an animation is broken. Then turn the stretch that matters into a **frame strip** (`swift scripts/video_frames.swift <video> <out.png> <from-s> <to-s> <count> [full|top|bottom]` on macOS, or `ffmpeg -ss <from> -t <len> -i <video> -vf "fps=4,scale=240:-1,tile=8x1" -frames:v 1 <out.png>`) and use it as the proof image next to the video: overlapping rows, jumps and missing transitions are visible at a glance, and images show in every report format and chat while videos often don't.
 4. Compare with the expected result: right screen, right text, animation completes, no freeze, no console/log errors, state persists after leaving and returning. Then run the visual check from [references/visual-check.md](references/visual-check.md) on the screenshot: clipped or cut-off text, broken, stretched or blurry images, containers cut off or overlapping, content under the notch, keyboard or system bars. Zoom into edges instead of judging the whole screen at a glance. Compare spacing, type, colours, shapes, icons and motion against the design profile.
 5. Mark the item: `ok`, `problem` (link the finding), `blocked` (say what blocks it), `skipped (destructive)`, `asked`, or `not reachable`.
 
@@ -81,7 +84,7 @@ After a crash or hang, collect the evidence before relaunching: the crash report
 
 When something is wrong, write the finding immediately in `findings.md` (template in the checklist reference) with severity, exact repro steps from a known start state, expected vs actual, screenshot paths and relevant log lines. Then continue — don't stop to fix unless the user asked you to; a blocker that hides the rest of the app is the exception (report it and ask).
 
-Watch for these problem classes in particular: crash or hang, dead control (nothing happens), wrong or untranslated text, truncated text, broken or distorted images, clipped or overlapping containers, content under system UI, broken or janky animation, state lost after navigation, missing feedback (no spinner, no confirmation), inconsistent behaviour between similar controls, deviations from the design profile (spacing off the scale, wrong type style, hard-coded colours, foreign icons, non-native or inconsistent animations), accessibility gaps (unlabeled buttons, too small targets, unreadable in dark mode or large text).
+Watch for these problem classes in particular: crash or hang, dead control (nothing happens), wrong or untranslated text, truncated text, broken or distorted images, clipped or overlapping containers, content under system UI, broken or janky animation, state lost after navigation, live data that stops arriving after leaving the app and coming back (system Settings, share sheet, background) while the status still looks fine, missing feedback (no spinner, no confirmation), inconsistent behaviour between similar controls, deviations from the design profile (spacing off the scale, wrong type style, hard-coded colours, foreign icons, non-native or inconsistent animations), accessibility gaps (unlabeled buttons, too small targets, unreadable in dark mode or large text).
 
 ### 4. Report
 

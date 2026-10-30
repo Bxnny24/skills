@@ -395,6 +395,9 @@ def main():
         sys.exit(f"Previous run not found: {prev}")
 
     data = build_data(run_dir, prev, args.threshold, args.lang)
+    if not any(s["items"] for s in data.get("sections", [])):
+        print("Warning: no checklist items found. checklist.md needs table rows (| ID | Interaction | …) under '## ' headings, "
+              "as in references/checklist-template.md.", file=sys.stderr)
     summary = summary_markdown(data)
     if not args.link_media:
         embed_media(data, run_dir)

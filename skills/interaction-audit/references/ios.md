@@ -31,12 +31,14 @@ Simulator and Xcode exist only on macOS: on Windows or Linux an iOS app can't be
 - Swipe back from the left edge (start exactly at the edge) vs. dragging content near the edge (start > 4 pt away).
 - Pull to refresh; scroll to the very end of long lists; scroll-to-top by tapping the status bar.
 - Dismissing sheets by dragging down — does unsaved input survive or get a warning?
+- Typing: the Simulator tool's text input can go through the pasteboard, so an app that reads the pasteboard shows its "Allow Paste" prompt. If that happens, type by tapping the on-screen keys and don't report the prompt as an app finding.
 - Keyboard: return key action, dismissal, the field staying visible above the keyboard, paste from clipboard (the paste-permission prompt appears only when the app reads the pasteboard).
 - Dynamic Type: set the largest accessibility size (`simctl ui booted content_size accessibility-extra-extra-extra-large`) and recheck every screen.
 - Dark mode, rotation (if supported), iPad/split view (if supported), reduced motion.
 - Backgrounding and returning (`button HOME`, relaunch), killing and relaunching (state restoration).
 - Permission prompts: first-time allow, deny, then the "denied" state and its recovery path. Reset with `simctl privacy booted reset all <bundle-id>`.
-- Offline / unreachable peer or server: the Simulator uses the Mac's network; stop the local server or peer instead of toggling the Mac's Wi-Fi.
+- Offline / unreachable peer or server: the Simulator uses the Mac's network; stop the local server or peer instead of toggling the Mac's Wi-Fi. To mimic a peer that went to sleep (the common real case: connection half-open, peer state kept), freeze its process with `kill -STOP <pid>` and wake it with `kill -CONT <pid>`. A test peer that reads commands from stdin can be driven from the side through a FIFO: `mkfifo peer.in; tail -f peer.in | ./peer` then `echo "…" > peer.in`.
+- After every trip out of the app (Settings via a deep link, share sheet, Home and back), send something from the peer or server and check it **arrives live**; a green status alone proves nothing. Then check pull to refresh and a relaunch, and note which of them brings it back.
 
 ## Proof
 
