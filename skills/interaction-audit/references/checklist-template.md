@@ -7,7 +7,7 @@
 
 Started: <date time> · Status: in progress | done
 Device/OS: <device, OS version> · State: <plan/account/flags for the full pass> · Versions covered: <newest, oldest>
-Legend: P1 core flow, money or data · P2 other screens · P3 variations ·
+Legend: Prio A critical (crash, data loss, money, security) · B core flow · C other screens · D polish ·
 ok · problem (→ F-ID) · blocked · skipped (destructive) · asked · not reachable
 
 ## Coverage
@@ -17,7 +17,7 @@ ok · problem (→ F-ID) · blocked · skipped (destructive) · asked · not rea
 ## S01 <Screen name> (source: <file path>)
 | ID | Interaction | Expected | Result | Proof |
 |---|---|---|---|---|
-| S01-01 | P1 Tap "Add" button | Editor sheet opens | ok | screenshots/S01-01-add.png |
+| S01-01 | B Tap "Add" button | Editor sheet opens | ok | screenshots/S01-01-add.png |
 | S01-02 | Long press a row | Context menu with Copy, Pin, Delete | problem → F-003 | screenshots/S01-02-hold.png |
 | S01-03 | Swipe row left → Delete | Confirmation, then row removed | skipped (destructive, real data) | screenshots/S01-03-confirm.png |
 
@@ -40,7 +40,7 @@ ok · problem (→ F-ID) · blocked · skipped (destructive) · asked · not rea
 # Findings
 
 ## F-001 <short title>
-- Prio: P1 core flow, money or data · P2 other screens · P3 variations and polish
+- Prio: A critical (crash, data loss, money, security) · B core flow broken · C other screens · D polish
 - Severity: critical (crash, data loss, core flow blocked) | high (major feature broken) | medium (friction, workaround exists) | low (polish)
 - Category: crash · dead control · wrong text · layout · animation · state · feedback · accessibility · design · performance
 - Where: <full path as the user sees it, e.g. Settings › Shortcuts › Reset all shortcuts>, item <ID>
@@ -51,8 +51,8 @@ ok · problem (→ F-ID) · blocked · skipped (destructive) · asked · not rea
 - Expected: …
 - Actual: …
 - Why it matters: <who runs into it and what it costs them>
-- Group: A fix · B decide · C leave
-- Fix (A) / Options (B): …
+- Group: fix · decide · leave
+- Fix / Options (for decide): …
 - Proof: screenshots/F-001-1.png, screenshots/F-001-2.png; log lines: …
 - Notes: suspected source <file:line> (only as a hint, the finding stands on observed behaviour)
 ```

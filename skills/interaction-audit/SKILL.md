@@ -65,7 +65,7 @@ Also list the **states the app can be in** — plans and licences (free, trial, 
 
 Group the checklist by screen. Each item is one interaction with its expected result. Expect dozens to hundreds of items for a real app — that is the point.
 
-**Order by risk**, so an interrupted run has still covered what matters most: first the core flows (the reason the app exists), then anything touching money (purchases, licences, paywalls), then anything that can lose or leak data (delete, sync, sign-out, export, permissions), then the rest of the screens, then the cross-cutting variations and states. Mark each item's priority (`P1`–`P3`) in the checklist and work top-down.
+**Order by risk**, so an interrupted run has still covered what matters most: first the core flows (the reason the app exists), then anything touching money (purchases, licences, paywalls), then anything that can lose or leak data (delete, sync, sign-out, export, permissions), then the rest of the screens, then the cross-cutting variations and states. Mark each item's priority in the checklist and work top-down. Priority uses letters: **A** critical (crash, data loss, money, security) · **B** core flow broken · **C** other screens · **D** polish and variations.
 
 ### 3. Exercise — item by item
 
@@ -85,21 +85,23 @@ Watch for these problem classes in particular: crash or hang, dead control (noth
 
 ### 4. Report
 
-The result for the user is **always tables, in this fixed order, with no prose between them**, in the format the user chose (see *Deliver* below) — at most one short line under a heading. Write in the user's language and in plain words they recognise from the app, not in the shorthand you or the subagents used while working; never compress findings further on the way to the user. Translate the column names into short everyday words (in German: Nr · Prio · Wo · Was du tust · Was passiert · Richtig wäre · Warum es stört · Lösung / Optionen · Beweis; C: Warum lassen; not checked: Warum nicht · So prüfst du es). Each cell stays short (a few words up to one sentence); details live in `findings.md` and the HTML report.
+The result for the user is **always tables, in this fixed order, with no prose between them**, in the format the user chose (see *Deliver* below) — at most one short line under a heading. Write in the user's language and in plain words they recognise from the app, not in the shorthand you or the subagents used while working; never compress findings further on the way to the user. Translate the column names into short everyday words (in German: Nr · Prio · Wo · Was du tust · Was passiert · Richtig wäre · Warum es stört · Lösung / Optionen · Beweis; Lassen: Warum lassen; Nicht geprüft: Warum nicht · So prüfst du es; group headings Beheben · Entscheiden · Lassen · Nicht geprüft). Each cell stays short (a few words up to one sentence); details live in `findings.md` and the HTML report.
 
-1. **Overview** — one line: items checked · A fix · B decide · C leave · not checked.
-2. **A – Fix** (clear bugs and rule violations), sorted by priority:
+Groups are headings, never letters, because priority already uses letters. Findings get **one running number across all tables** (1, 2, 3 …, continuing into *Not checked*), so the user can answer with numbers alone.
+
+1. **Overview** — one line: items checked · to fix · to decide · to leave · not checked.
+2. **Fix** (clear bugs and rule violations), sorted by priority:
 
    | No. | Prio | Where | What you do | What happens | Should be | Why it matters | Fix | Proof |
    |---|---|---|---|---|---|---|---|---|
-   | A1 | P1 | Main window › Library › Clip list | Ctrl-click a second clip | only the second stays selected | both selected, like Explorer | multi-delete/move needs the tiny checkboxes | keep selection on Ctrl-click | [S04-07](screenshots/S04-07.png) |
+   | 1 | B | Main window › Library › Clip list | Ctrl-click a second clip | only the second stays selected | both selected, like Explorer | multi-delete/move needs the tiny checkboxes | keep selection on Ctrl-click | [S04-07](screenshots/S04-07.png) |
 
-3. **B – Decide** (may be intended or needs a product decision): same columns, but **Options** instead of *Fix* (e.g. "a) confirm dialog · b) undo toast · c) leave").
-4. **C – Leave** (cosmetic or arguably intended), short: `No. | Where | What | Why leave it`.
+3. **Decide** (may be intended or needs a product decision): same columns, but **Options** instead of *Fix* (e.g. "a) confirm dialog · b) undo toast · c) leave").
+4. **Leave** (cosmetic or arguably intended), short: `No. | Where | What | Why leave it`.
 5. **Not checked** — what was out of reach and how the user can check it: `No. | What | Why not | How you check it` (global shortcuts, pasting into other apps, tray, device-only features). Test-setup-only issues (mock data, test branch) go here too, marked as such, so they aren't mistaken for app bugs.
-6. **One question** to close: which option for each B, and whether A and C are fine (the user can answer with numbers, e.g. "A all, B1 a, B2 c").
+6. **One question** to close: which option for each *Decide* finding, and whether *Fix* and *Leave* are fine (the user can answer with numbers, e.g. "1–4 yes, 5 a, 6 c").
 
-"Where" is the full path to the spot, using the names the user sees in the app, from window or screen down to the control: `Settings › Shortcuts › Reset all shortcuts`, `Popup › Search field`, `Library › Context menu › Move to collection`. The user must be able to find it without asking. "What you do" names concrete steps from a start state the user recognises; "What happens" and "Should be" are observable, not technical causes. Priority: P1 core flow, money or data · P2 other screens · P3 variations and polish. "Proof" shows the screenshot itself (`<img src="screenshots/…" width="160">`, which renders in Markdown tables) or links the video.
+"Where" is the full path to the spot, using the names the user sees in the app, from window or screen down to the control: `Settings › Shortcuts › Reset all shortcuts`, `Popup › Search field`, `Library › Context menu › Move to collection`. The user must be able to find it without asking. "What you do" names concrete steps from a start state the user recognises; "What happens" and "Should be" are observable, not technical causes. Priority: A critical (crash, data loss, money, security) · B core flow broken · C other screens · D polish. "Proof" shows the screenshot itself (`<img src="screenshots/…" width="160">`, which renders in Markdown tables) or links the video.
 
 **Deliver:**
 
@@ -107,7 +109,7 @@ Run `python3 <skill-dir>/scripts/build_report.py <run-dir> --lang <en|de>` (add 
 
 1. **`report.html` (recommended):** the tables with image and video previews in the proof column (click to enlarge), then every checklist item with status filter and search; with `--previous`, every screenshot is marked unchanged, changed or new, with side-by-side and blink comparison (pixel ratio and diff image if Pillow is installed). Open it in the browser pane or send it with the file tool (`display: "render"`). If the user is away from the computer (remote control, phone), local files won't open there: offer to publish the report as a private artifact, and only do so after they agree, since it uploads their app's screenshots.
 2. **`summary.md`:** send it with the file tool so it renders as a card; the proof column shows the images (`<img src="screenshots/…" width="160">`).
-3. **Tables in the chat:** paste the tables into the chat with file names in the proof column, then send the proof files of all A and B findings with the file tool, in table order, caption = finding number.
+3. **Tables in the chat:** paste the tables into the chat with file names in the proof column, then send the proof files of all *Fix* and *Decide* findings with the file tool, in table order, caption = finding number.
 
 In every format, the chat text itself is only the overview line, the closing question and one line pointing to the other files (`checklist.md`, `findings.md`, screenshots folder, and `report.html` if it wasn't the chosen format). For stable screenshot comparisons across runs, keep device, size and data the same and freeze the status bar (`xcrun simctl status_bar booted override --time 9:41 --batteryLevel 100`, Android demo mode).
 

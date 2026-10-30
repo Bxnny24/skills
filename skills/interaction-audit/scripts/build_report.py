@@ -26,18 +26,37 @@ STATUSES = ["ok", "problem", "blocked", "skipped", "asked", "not reachable", "no
 MEDIA_RE = re.compile(r"[\w./*\-\[\]]+\.(?:png|jpe?g|gif|webp|mp4|mov|webm)", re.IGNORECASE)
 VIDEO_EXT = {".mp4", ".mov", ".webm"}
 LABELS = {
-    "en": {"A": "A – Fix", "B": "B – Decide", "C": "C – Leave", "N": "Not checked", "no": "No.", "prio": "Prio",
+    "en": {"A": "Fix", "B": "Decide", "C": "Leave", "N": "Not checked", "no": "No.", "prio": "Prio",
            "where": "Where", "do": "What you do", "happens": "What happens", "should": "Should be",
            "why": "Why it matters", "fix": "Fix", "options": "Options", "proof": "Proof", "what": "What",
            "leave": "Why leave it", "whynot": "Why not", "howcheck": "How you check it", "all": "All checklist items", "findings": "Findings",
            "summary": "{t} items checked · {a} fix · {b} decide · {c} leave · {n} not checked"},
-    "de": {"A": "A – Beheben", "B": "B – Entscheiden", "C": "C – Lassen", "N": "Nicht geprüft", "no": "Nr", "prio": "Prio",
+    "de": {"A": "Beheben", "B": "Entscheiden", "C": "Lassen", "N": "Nicht geprüft", "no": "Nr", "prio": "Prio",
            "where": "Wo", "do": "Was du tust", "happens": "Was passiert", "should": "Richtig wäre",
            "why": "Warum es stört", "fix": "Lösung", "options": "Optionen", "proof": "Beweis", "what": "Was",
            "leave": "Warum lassen", "whynot": "Warum nicht", "howcheck": "So prüfst du es", "all": "Alle Prüfpunkte", "findings": "Funde",
            "summary": "{t} Punkte geprüft · {a} beheben · {b} entscheiden · {c} lassen · {n} nicht geprüft"},
 }
 L = LABELS["en"]
+PRIO_ORDER = {"A": 0, "B": 1, "C": 2, "D": 3}
+GROUP_WORDS = {"A": ("fix", "beheben"), "B": ("decide", "entscheiden"), "C": ("leave", "lassen")}
+
+
+def group_of(value):
+    text = value.strip().lower()
+    for key, words in GROUP_WORDS.items():
+        if text.startswith(words):
+            return key
+    letter = text[:1].upper()
+    return letter if letter in GROUP_WORDS else "A"
+
+
+def number_findings(findings):
+    """Order findings by group, then priority, and give them one running number."""
+    ordered = sorted(findings, key=lambda f: ("ABC".index(f["group"]), PRIO_ORDER.get(f["prio"], 9)))
+    for n, f in enumerate(ordered, 1):
+        f["no"] = n
+    return ordered
 
 
 def split_row(line):
@@ -206,12 +225,11 @@ def parse_findings(path):
     for f in findings:
         if "where" in f["fields"]:
             f["fields"]["where"] = re.sub(r",?\s*item\s+\S+\s*$", "", f["fields"]["where"])
-        group = f["fields"].get("group", "").strip()[:1].upper()
-        f["group"] = group if group in "ABC" and group else "A"
-        prio = re.search(r"P[123]", f["fields"].get("prio", "") + " " + f["fields"].get("priority", ""))
-        f["prio"] = prio.group(0) if prio else ""
+        f["group"] = group_of(f["fields"].get("group", ""))
+        prio = re.match(r"\s*([ABCD])(?![\w+])", f["fields"].get("prio", "") or f["fields"].get("priority", ""))
+        f["prio"] = prio.group(1) if prio else ""
         f["fix"] = next((v for k, v in f["fields"].items() if k.startswith(("fix", "proposed fix", "options"))), "")
-    return findings
+    return number_findings(findings)
 
 
 def preview_html(run_dir, proof):
@@ -236,26 +254,26 @@ def summary_tables(run_dir, findings, sections):
         rows = [f for f in findings if f["group"] == group]
         if not rows:
             continue
-        rows.sort(key=lambda f: f["prio"] or "P9")
         if group == "C":
             head = f"<tr><th>{L['no']}</th><th>{L['where']}</th><th>{L['what']}</th><th>{L['leave']}</th></tr>"
             body = "".join(
-                f'<tr><td><a href="#{f["id"]}">C{i}</a></td>{cell(f["fields"].get("where", ""))}{cell(f["title"])}'
-                f'{cell(f["fields"].get("why it matters", ""))}</tr>' for i, f in enumerate(rows, 1))
+                f'<tr><td><a href="#{f["id"]}">{f["no"]}</a></td>{cell(f["fields"].get("where", ""))}{cell(f["title"])}'
+                f'{cell(f["fields"].get("why it matters", ""))}</tr>' for f in rows)
         else:
             fix = L["fix"] if group == "A" else L["options"]
             head = (f"<tr><th>{L['no']}</th><th>{L['prio']}</th><th>{L['where']}</th><th>{L['do']}</th>"
                     f"<th>{L['happens']}</th><th>{L['should']}</th><th>{L['why']}</th><th>{fix}</th><th>{L['proof']}</th></tr>")
             body = "".join(
-                f'<tr><td><a href="#{f["id"]}">{group}{i}</a></td>{cell(f["prio"])}{cell(f["fields"].get("where", ""))}'
+                f'<tr><td><a href="#{f["id"]}">{f["no"]}</a></td>{cell(f["prio"])}{cell(f["fields"].get("where", ""))}'
                 f'{cell(" → ".join(f["steps"]) or f["fields"].get("steps", ""))}{cell(f["fields"].get("actual", ""))}'
                 f'{cell(f["fields"].get("expected", ""))}{cell(f["fields"].get("why it matters", ""))}{cell(f["fix"])}'
                 f'<td class="proof">{preview_html(run_dir, f["fields"].get("proof", ""))}</td></tr>'
-                for i, f in enumerate(rows, 1))
+                for f in rows)
         parts.append(f'<h2>{labels[group]}</h2><div class="tablewrap"><table>{head}{body}</table></div>')
     unchecked = [i for s in sections for i in s["items"] if i["status"] in {"blocked", "not reachable"}]
     if unchecked:
-        body = "".join(f'<tr><td>N{n}</td>{cell(i["what"])}{cell(i["result"])}</tr>' for n, i in enumerate(unchecked, 1))
+        start = len(findings) + 1
+        body = "".join(f'<tr><td>{n}</td>{cell(i["what"])}{cell(i["result"])}</tr>' for n, i in enumerate(unchecked, start))
         parts.append(f'<h2>{L["N"]}</h2><div class="tablewrap"><table><tr><th>{L["no"]}</th><th>{L["what"]}</th>'
                      f'<th>{L["whynot"]}</th></tr>{body}</table></div>')
     return "".join(parts)
@@ -278,20 +296,20 @@ def md_proof(run_dir, proof):
 
 
 def summary_markdown(run_dir, title, findings, sections, total, counts, groups):
-    """The user-facing result: overview line and the A/B/C/not-checked tables as Markdown."""
+    """The user-facing result: overview line and the fix/decide/leave/not-checked tables as Markdown."""
     unchecked = [i for s in sections for i in s["items"] if i["status"] in {"blocked", "not reachable"}]
     lines = [f"# {title}", "", L["summary"].format(t=total, a=groups.get("A", 0), b=groups.get("B", 0),
                                                        c=groups.get("C", 0), n=len(unchecked)), ""]
     for group in "AB":
-        rows = sorted((f for f in findings if f["group"] == group), key=lambda f: f["prio"] or "P9")
+        rows = [f for f in findings if f["group"] == group]
         if not rows:
             continue
         fix = L["fix"] if group == "A" else L["options"]
         lines += [f"## {L[group]}", "",
                   f"| {L['no']} | {L['prio']} | {L['where']} | {L['do']} | {L['happens']} | {L['should']} | {L['why']} | {fix} | {L['proof']} |",
                   "|---|---|---|---|---|---|---|---|---|"]
-        for i, f in enumerate(rows, 1):
-            cells = [f"{group}{i}", f["prio"], f["fields"].get("where", ""), " → ".join(f["steps"]) or f["fields"].get("steps", ""),
+        for f in rows:
+            cells = [str(f["no"]), f["prio"], f["fields"].get("where", ""), " → ".join(f["steps"]) or f["fields"].get("steps", ""),
                      f["fields"].get("actual", ""), f["fields"].get("expected", ""), f["fields"].get("why it matters", ""),
                      f["fix"], md_proof(run_dir, f["fields"].get("proof", ""))]
             lines.append("| " + " | ".join(md_cell(c) for c in cells) + " |")
@@ -299,13 +317,13 @@ def summary_markdown(run_dir, title, findings, sections, total, counts, groups):
     rows = [f for f in findings if f["group"] == "C"]
     if rows:
         lines += [f"## {L['C']}", "", f"| {L['no']} | {L['where']} | {L['what']} | {L['leave']} |", "|---|---|---|---|"]
-        lines += [f"| C{i} | {md_cell(f['fields'].get('where', ''))} | {md_cell(f['title'])} | {md_cell(f['fields'].get('why it matters', ''))} |"
-                  for i, f in enumerate(rows, 1)]
+        lines += [f"| {f['no']} | {md_cell(f['fields'].get('where', ''))} | {md_cell(f['title'])} | {md_cell(f['fields'].get('why it matters', ''))} |"
+                  for f in rows]
         lines.append("")
     if unchecked:
         lines += [f"## {L['N']}", "", f"| {L['no']} | {L['what']} | {L['whynot']} | {L['howcheck']} |", "|---|---|---|---|"]
-        lines += [f"| N{n} | {md_cell(i['what'])} | {md_cell(i['result'])} | {md_cell(i['expected'])} |"
-                  for n, i in enumerate(unchecked, 1)]
+        lines += [f"| {n} | {md_cell(i['what'])} | {md_cell(i['result'])} | {md_cell(i['expected'])} |"
+                  for n, i in enumerate(unchecked, len(findings) + 1)]
         lines.append("")
     return "\n".join(lines)
 
