@@ -84,23 +84,25 @@ Watch for these problem classes in particular: crash or hang, dead control (noth
 
 ### 4. Report
 
-Write the summary for the user in **their language and in plain words**, not in the shorthand you or the subagents used while working — never compress findings further on the way to the user. Explain every finding as a small story: *what you do* (steps from a start state they recognise), *what happens*, *what you'd expect instead* and *why it matters* (who trips over it, what it costs them). One finding per numbered item, no jargon, no internal IDs as the only description.
+The result for the user is **always tables, in this fixed order, with no prose between them** — at most one short line under a heading. Write in the user's language and in plain words they recognise from the app, not in the shorthand you or the subagents used while working; never compress findings further on the way to the user. Translate the column names. Each cell stays short (a few words up to one sentence); details live in `findings.md` and the HTML report.
 
-Group the findings by what the user has to do with them:
+1. **Overview** — one line: items checked · A fix · B decide · C leave · not checked.
+2. **A – Fix** (clear bugs and rule violations), sorted by priority:
 
-- **A – Fix:** clear bugs and rule violations; say you'd fix them and ask for a go-ahead.
-- **B – Decide:** behaviour that may be intended or needs a product decision (missing confirmations, hidden vs. disabled features, wording); describe the options briefly.
-- **C – Leave:** cosmetic or arguably intended; one line each, so the user can veto.
+   | No. | Prio | Area | You do | Happens | Expected | Why it matters | Proposed fix | Proof |
+   |---|---|---|---|---|---|---|---|---|
+   | A1 | P1 | Library | Ctrl-click a second clip | only the second stays selected | both selected, like Explorer | multi-delete/move needs the tiny checkboxes | keep selection on Ctrl-click | [S04-07](screenshots/S04-07.png) |
 
-End with one clear question: which of B they want how, and whether A and C are fine.
+3. **B – Decide** (may be intended or needs a product decision): same columns, but **Options** instead of *Proposed fix* (e.g. "a) confirm dialog · b) undo toast · c) leave").
+4. **C – Leave** (cosmetic or arguably intended), short: `No. | Area | What | Why leave it`.
+5. **Not checked** — what was out of reach and how the user can check it: `No. | What | Why not here | How you check it yourself` (global shortcuts, pasting into other apps, tray, device-only features). Test-setup-only issues (mock data, test branch) go here too, marked as such, so they aren't mistaken for app bugs.
+6. **One question** to close: which option for each B, and whether A and C are fine (the user can answer with numbers, e.g. "A all, B1 a, B2 c").
 
-Then also deliver:
+"You do" names concrete steps from a start state the user recognises; "Happens" and "Expected" are observable, not technical causes. Priority: P1 core flow, money or data · P2 other screens · P3 variations and polish. "Proof" links the screenshot or video file (relative to the run folder) so the user can open it.
+
+Then also deliver, below the tables:
 
 - The clickable report: `python3 <skill-dir>/scripts/build_report.py <run-dir>` writes `report.html` (filter by status, search, screenshots and videos per item, findings linked). With `--previous <earlier-run-dir>` it compares every screenshot with the same file from that run and marks it unchanged, changed or new, with side-by-side and blink comparison (pixel ratio and diff image if Pillow is installed). For stable comparisons, keep device, size and data the same and freeze the status bar (`xcrun simctl status_bar booted override --time 9:41 --batteryLevel 100`, Android demo mode). Open the report or send it with a file tool.
-- Coverage numbers: total items, ok, problem, blocked, skipped, not reachable — per screen.
-- The findings, most severe first.
-- What was **not** covered and why, plus the residual risk — including a short list of what can only be checked in the real app or on a device (global shortcuts, pasting into other apps, tray/menu bar, system dialogs) as steps the user can do themselves.
-- Anything that only concerns the test setup (mock data, test branch) separately, so it isn't mistaken for an app bug.
 - Paths to `checklist.md`, `findings.md` and the screenshots folder; send the most telling screenshots with a file tool if one is available.
 
 If the project tracks tests or issues somewhere (a status page, an issue tracker), follow its rules for where findings go — but ask before filing anything publicly.
