@@ -4,6 +4,7 @@
 
 - **Built-in browser** (`mcp__Claude_Browser__*`): default for local dev servers (`preview_start` with a `.claude/launch.json` name) and public sites. `read_page` (accessibility tree with refs) for inventory, `find` + `computer` (click/hover/drag/key) and `form_input` to act, `read_console_messages` and `read_network_requests` after each item, `resize_window` (mobile/tablet/desktop, `colorScheme` dark/light), `computer screenshot` for proof.
 - **Claude in Chrome** (`mcp__claude-in-chrome__*`): the user's real Chrome. Needed for **browser extensions** (popup, options page, content scripts on real pages, context-menu entries, keyboard commands) because the built-in browser does not load the user's extensions. Use it only when the user agrees; never act on their logged-in accounts beyond the test.
+- Which of the two fits which job, and when to suggest installing Claude in Chrome: [environments.md](environments.md#which-browser-tool).
 - **Playwright**: if the project already has Playwright set up, a scripted crawl can drive repeatable parts and capture traces; the manual pass still covers what scripts don't.
 
 ## Code pass – what to grep

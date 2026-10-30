@@ -32,6 +32,38 @@ Run the full audit on the newest OS / browser the app supports, then a layout-an
 
 Installing extra runtimes, browsers or VMs costs disk space and time: list what's missing in the upfront questions, with sizes, and download only what the user approves. Record which versions were covered in the checklist header; anything not covered goes into the report's residual risk.
 
+## Which browser tool
+
+Both browsers can click, type, screenshot and read the page; pick per job, and use both in one run when it helps.
+
+| Job | Built-in browser | Claude in Chrome |
+|---|---|---|
+| Local dev server (`launch.json`, Vite, the web view of a Tauri/Electron app) | **first choice** (isolated, console and network, viewport and dark-mode emulation) | works too |
+| Public site without sign-in | **first choice** | works too |
+| Browser extension (popup, options, content scripts, context menu, `commands`) | can't load extensions | **required**, with the unpacked build loaded in the user's Chrome |
+| Flows that need the user's real sign-in, cookies or saved sessions | isolated, no user sessions | only if approved up front, and only within the test |
+| Real Chrome rendering, Chrome-only APIs, several windows | approximates | **better** |
+| Local `file://` pages (e.g. a static export) | static snapshot only, scripts may not run | real page |
+
+Tauri renders in WKWebView (macOS) or WebView2 (Windows, Chromium-based), Electron in its own Chromium: the browser pass covers layout and logic of the frontend, but native windows, menus, tray, global shortcuts and the Rust/Node side still need the real app with computer-use.
+
+## Helpers worth suggesting
+
+When a tool or setup that isn't there yet would cover more, or the same with less effort, **suggest it in the upfront round** with what it unlocks, its cost (download size, time, account) and your recommendation. Never install, enable or sign up yourself without approval; without it, the run uses what is there and the report lists what the helper would have covered.
+
+| Missing here | Suggest | Unlocks |
+|---|---|---|
+| Claude in Chrome not connected, but the target is a browser extension or needs real Chrome | install or connect the Claude in Chrome extension | extension popup, options, content scripts, real Chrome |
+| computer-use not enabled, native desktop items in scope | enabling computer-use (and screen-recording / accessibility access when the OS asks) | native windows, menus, tray, drag and drop, global shortcuts |
+| Android target, no emulator set up (Windows, Mac or Linux) | Android Studio with an AVD for the newest API and one for `minSdk`; on Windows enable WHPX/Hyper-V | the whole Android pass |
+| iOS target, simulator runtime for the deployment target missing | that runtime (Xcode → Settings → Components) | oldest-iOS pass |
+| Windows app on a Mac, macOS app on Windows | a Windows VM (Parallels/UTM) or a session on the other machine | the native pass on that OS |
+| No real device connected, device-only features in scope | connecting the phone (cable or Wi-Fi pairing) | camera, Shortcuts/Siri, NFC, push, real performance |
+| Taps by coordinates are fragile (large app, many lists) | `agent-device` | stable element refs, videos, real-iPhone taps |
+| The project has Playwright, Maestro, XCUITest or Espresso | using it for repeatable flows | faster reruns, traces |
+| Screenshot comparison with an earlier run | Pillow (`pip install pillow`) | pixel ratio and diff images in the report |
+| A permission prompt for every shell command | allow rules for the run's read-only commands (the `fewer-permission-prompts` skill, if available) | an uninterrupted run |
+
 ## When the target can't run here
 
 Put these into the upfront questions in this order and let the user choose; never pick a paid or account-bound option yourself.
