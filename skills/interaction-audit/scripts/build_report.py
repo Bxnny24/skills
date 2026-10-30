@@ -5,17 +5,20 @@ Reads checklist.md and findings.md from a run folder, links the proof
 screenshots and videos, and optionally compares every screenshot with the
 same file in a previous run. Writes into the run folder:
 
-- report.html: assets/report-template.html filled with the run's data
+- report.html: assets/report-template.html filled with the run's data; proof
+               images are embedded, so the file shows them anywhere (also in
+               viewers that copy the page without its folder)
 - summary.md:  the same result tables as Markdown, with image previews
 
 Usage:
-    python3 build_report.py <run-dir> [--previous <previous-run-dir>] [--lang de] [--threshold 0.002]
+    python3 build_report.py <run-dir> [--previous <previous-run-dir>] [--lang de] [--link-media] [--threshold 0.002]
 
 Only the standard library is required. If Pillow is installed, changed
 screenshots also get a pixel-difference ratio and a diff image.
 """
 
 import argparse
+import base64
 import datetime
 import hashlib
 import json
@@ -29,6 +32,9 @@ STATUSES = ["ok", "problem", "blocked", "skipped", "asked", "not reachable", "no
 UNCHECKED = {"blocked", "not reachable"}
 MEDIA_RE = re.compile(r"[\w./*\-\[\]]+\.(?:png|jpe?g|gif|webp|svg|mp4|mov|webm)", re.IGNORECASE)
 VIDEO_EXT = {".mp4", ".mov", ".webm"}
+MIME = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif",
+        ".webp": "image/webp", ".svg": "image/svg+xml"}
+EMBED_LIMIT = 40 * 1024 * 1024  # stop embedding once report.html would grow past this
 PRIO_ORDER = {"A": 0, "B": 1, "C": 2, "D": 3}
 GROUP_KEYS = ["fix", "decide", "leave"]
 GROUP_WORDS = {"fix": ("fix", "beheben", "a"), "decide": ("decide", "entscheiden", "b"), "leave": ("leave", "lassen", "c")}
@@ -248,6 +254,36 @@ def media_list(run_dir, proof, prev_dir=None, threshold=0.0):
     return out
 
 
+def embed_media(data, run_dir):
+    """Add data: URIs for every image, as long as the total stays under EMBED_LIMIT."""
+    total, cache = 0, {}
+
+    def uri(path):
+        nonlocal total
+        path = Path(path)
+        if path in cache:
+            return cache[path]
+        mime = MIME.get(path.suffix.lower())
+        if not mime or not path.exists():
+            return None
+        raw = path.read_bytes()
+        if total + len(raw) * 4 // 3 > EMBED_LIMIT:
+            return None
+        total += len(raw) * 4 // 3
+        cache[path] = f"data:{mime};base64,{base64.b64encode(raw).decode()}"
+        return cache[path]
+
+    lists = [f["media"] for f in data["findings"]] + [i["media"] for s in data["sections"] for i in s["items"]]
+    for media in lists:
+        for m in media:
+            if m["type"] == "image" and not m["missing"]:
+                m["data"] = uri(run_dir / m["src"])
+            prev = m.get("cmp", {}).get("prev")
+            if prev and not prev.startswith("file:"):
+                m["cmp"]["prevData"] = uri(run_dir / prev)
+    return total
+
+
 # ---------- outputs ----------
 
 def build_data(run_dir, prev_dir, threshold, lang):
@@ -267,7 +303,7 @@ def build_data(run_dir, prev_dir, threshold, lang):
             changed += any(m.get("cmp", {}).get("state") == "changed" for m in item["media"])
 
     unchecked_items = [i for s in sections for i in s["items"] if i["status"] in UNCHECKED]
-    unchecked = [{"no": n, "what": i["what"],
+    unchecked = [{"no": n, "prio": i["prio"], "what": i["what"],
                   "why": re.sub(r"^(blocked|not reachable)\s*", "", i["result"]).strip(" ()") or i["result"],
                   "how": i["expected"]} for n, i in enumerate(unchecked_items, len(findings) + 1)]
 
@@ -347,6 +383,8 @@ def main():
     parser.add_argument("run_dir", type=Path)
     parser.add_argument("--previous", type=Path, help="previous run folder to compare screenshots with")
     parser.add_argument("--lang", choices=sorted(LABELS), default="en", help="language of headings and column names")
+    parser.add_argument("--link-media", action="store_true",
+                        help="link images instead of embedding them in report.html (smaller file, needs the run folder)")
     parser.add_argument("--threshold", type=float, default=0.002,
                         help="changed-pixel ratio still counted as unchanged (Pillow only)")
     args = parser.parse_args()
@@ -357,12 +395,15 @@ def main():
         sys.exit(f"Previous run not found: {prev}")
 
     data = build_data(run_dir, prev, args.threshold, args.lang)
+    summary = summary_markdown(data)
+    if not args.link_media:
+        embed_media(data, run_dir)
     payload = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     template = TEMPLATE.read_text(encoding="utf-8")
     if PLACEHOLDER not in template:
         sys.exit(f"Placeholder {PLACEHOLDER} not found in {TEMPLATE}")
     (run_dir / "report.html").write_text(template.replace(PLACEHOLDER, payload), encoding="utf-8")
-    (run_dir / "summary.md").write_text(summary_markdown(data), encoding="utf-8")
+    (run_dir / "summary.md").write_text(summary, encoding="utf-8")
     print(json.dumps({"report": str(run_dir / "report.html"), "summary": str(run_dir / "summary.md"),
                       "counts": data["counts"]}))
 
