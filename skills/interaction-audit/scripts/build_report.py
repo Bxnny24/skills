@@ -276,6 +276,18 @@ def image_size(path):
     return None
 
 
+def priority_warnings(data):
+    """Name checklist items and findings that carry no A–D priority."""
+    items = [i["id"] or i["what"] for sec in data["sections"] for i in sec["items"] if not i["prio"]]
+    findings = [f["id"] or f["title"] for f in data["findings"] if not f["prio"]]
+    warnings = []
+    for kind, ids in (("checklist items", items), ("findings", findings)):
+        if ids:
+            shown = ", ".join(ids[:10]) + (f" and {len(ids) - 10} more" if len(ids) > 10 else "")
+            warnings.append(f"{len(ids)} {kind} without A–D: {shown}")
+    return warnings
+
+
 def proof_warnings(data, run_dir):
     """Proofs of findings that the user could not read: missing or too small."""
     out = []
@@ -453,6 +465,8 @@ def main():
               "as in references/checklist-template.md.", file=sys.stderr)
     for warning in proof_warnings(data, run_dir):
         print("Proof warning: " + warning, file=sys.stderr)
+    for warning in priority_warnings(data):
+        print("Priority warning: " + warning, file=sys.stderr)
     if args.history:
         data["history"] = json.loads(args.history.read_text(encoding="utf-8"))
     summary = summary_markdown(data)
