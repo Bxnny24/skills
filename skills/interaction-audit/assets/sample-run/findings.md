@@ -1,10 +1,11 @@
 # Findings
 
-## F-001 Ctrl-click keeps only the last clip selected
+## F-001 Ctrl-click doesn't select several clips, only the last one
 - Prio: B
 - Severity: high
 - Category: state
 - Where: Main window › Library › Clip list, item S02-04
+- When: always
 - Start state: library with 12 clips, nothing selected
 - Steps:
   1. Click a clip
@@ -16,10 +17,11 @@
 - Fix / Options (for decide): keep the selection on Ctrl-click, Shift-click selects a range
 - Proof: screenshots/S02-04-ctrl-click.svg
 
-## F-002 Clip counter cut off while editing
+## F-002 The clip counter in the popup footer is cut off to „14…“ while editing
 - Prio: C
 - Category: layout
 - Where: Popup › Footer › Clip counter, item S03-01
+- When: only while editing a clip
 - Steps:
   1. Open the popup
   2. Open any clip for editing
@@ -34,6 +36,7 @@
 - Prio: A
 - Category: feedback
 - Where: Settings › Shortcuts › Reset all shortcuts, item S05-02
+- When: always
 - Steps:
   1. Open Settings › Shortcuts
   2. Click "Reset all shortcuts"
