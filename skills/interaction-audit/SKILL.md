@@ -91,10 +91,12 @@ The result for the user is **always tables, in this fixed order, with no prose b
 
    | No. | Prio | Area | You do | Happens | Expected | Why it matters | Proposed fix | Proof |
    |---|---|---|---|---|---|---|---|---|
-   | A1 | P1 | Library | Ctrl-click a second clip | only the second stays selected | both selected, like Explorer | multi-delete/move needs the tiny checkboxes | keep selection on Ctrl-click | [S04-07](screenshots/S04-07.png) |
+   | A1 | P1 | Main window › Library › Clip list | Ctrl-click a second clip | only the second stays selected | both selected, like Explorer | multi-delete/move needs the tiny checkboxes | keep selection on Ctrl-click | [S04-07](screenshots/S04-07.png) |
 
 3. **B – Decide** (may be intended or needs a product decision): same columns, but **Options** instead of *Proposed fix* (e.g. "a) confirm dialog · b) undo toast · c) leave").
 4. **C – Leave** (cosmetic or arguably intended), short: `No. | Area | What | Why leave it`.
+
+"Area" is the full path to the spot, using the names the user sees in the app, from window or screen down to the control: `Settings › Shortcuts › Reset all shortcuts`, `Popup › Search field`, `Library › Context menu › Move to collection`. The user must be able to find it without asking.
 5. **Not checked** — what was out of reach and how the user can check it: `No. | What | Why not here | How you check it yourself` (global shortcuts, pasting into other apps, tray, device-only features). Test-setup-only issues (mock data, test branch) go here too, marked as such, so they aren't mistaken for app bugs.
 6. **One question** to close: which option for each B, and whether A and C are fine (the user can answer with numbers, e.g. "A all, B1 a, B2 c").
 

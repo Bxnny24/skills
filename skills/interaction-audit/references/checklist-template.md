@@ -42,7 +42,7 @@ ok · problem (→ F-ID) · blocked · skipped (destructive) · asked · not rea
 ## F-001 <short title>
 - Severity: critical (crash, data loss, core flow blocked) | high (major feature broken) | medium (friction, workaround exists) | low (polish)
 - Category: crash · dead control · wrong text · layout · animation · state · feedback · accessibility · design · performance
-- Where: <screen>, item <ID>
+- Where: <full path as the user sees it, e.g. Settings › Shortcuts › Reset all shortcuts>, item <ID>
 - Start state: <e.g. fresh install, 3 clips, offline>
 - Steps:
   1. …
