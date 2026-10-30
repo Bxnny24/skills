@@ -15,6 +15,12 @@ Run this check on every screenshot you take, not only when something looks off â
 - Icons misaligned with their label, inconsistent sizes, wrong tint in dark mode, invisible on the background.
 - Video/animation thumbnails, avatars and app icons with wrong masks or corners.
 
+## Small elements
+- Zoom to 100 % or more on every badge, dot, counter, chevron, check mark, close button and small icon; never judge them at full-screen size.
+- A badge or indicator covering its own glyph or label (e.g. a count badge over the clock it belongs to), clipped by its container or the screen edge, or placed where the platform doesn't put it (iOS: top trailing corner, overlapping only at the corner; Material: top end).
+- Still readable at the largest text size and in both themes; counts with 2â€“3 digits still fit.
+- Something built or changed in this session is judged from this zoomed image, not from its code.
+
 ## Containers and layout
 - Content clipped by a parent: cards, cells, sheets, popovers, dialogs, menus cut off at the screen or window edge, shadows and rounded corners chopped off.
 - Elements overlapping (z-order wrong), floating buttons covering the last list item or a text field.

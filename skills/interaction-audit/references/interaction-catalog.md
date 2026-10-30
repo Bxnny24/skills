@@ -11,6 +11,7 @@ Walk this catalog during the inventory and turn every entry that applies to the 
 - F. App lifecycle and data
 - G. Network, sync and multiple devices
 - H. Performance
+- H2. Motion and native feel
 - I. System integration and hardware
 - J. Privacy and security
 - K. Robustness (abuse the UI)
@@ -72,6 +73,12 @@ Walk this catalog during the inventory and turn every entry that applies to the 
 - Memory over a long session (open/close the same screen 20 times), CPU and battery while idle, background activity.
 - Large data: 1 000+ items, very large files/images, slow device or older OS version if the project supports one.
 - Record numbers when tools allow (Xcode Instruments / `xctrace`, Android `dumpsys gfxinfo`, browser Performance panel, `agent-device perf`) — findings need numbers or a recording, not "felt slow".
+
+## H2. Motion and native feel
+- Keyboard show and hide in every field and search (tap in, *Done*, *Cancel*, clear, scroll to dismiss, submit): timing against the native reference, field stays visible.
+- Sheet, popover, menu and dialog open/close and drag to dismiss; search open/close; push/pop and swipe back; tab and segment switches; row insert/delete/reorder.
+- Each one recorded and compared frame by frame with a native app on the same device; a still is never proof. Details and reference apps: [native-feel.md](native-feel.md).
+- Reduce Motion on: the app cross-fades or cuts like the reference.
 
 ## I. System integration and hardware
 - Share sheet in and out, open-in / file associations, Files / document picker, print, export.
